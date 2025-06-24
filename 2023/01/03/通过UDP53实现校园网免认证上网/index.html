@@ -1,0 +1,799 @@
+
+<!DOCTYPE html><html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="hexo-theme" content="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.31.0" theme-name="Stellar" theme-version="1.31.0">
+  
+  <meta name="generator" content="Hexo 7.3.0">
+  <meta http-equiv='x-dns-prefetch-control' content='on' />
+  
+  <meta name="renderer" content="webkit">
+  <meta name="force-rendering" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+  <meta name="HandheldFriendly" content="True" >
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000">
+  <meta name="theme-color" content="#f9fafb">
+  
+  <title>通过UDP53实现校园网免认证上网 - 文一刀</title>
+
+  
+    <meta name="description" content="有东西被加密了, 请输入密码查看.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="通过UDP53实现校园网免认证上网">
+<meta property="og:url" content="http://example.com/2023/01/03/%E9%80%9A%E8%BF%87UDP53%E5%AE%9E%E7%8E%B0%E6%A0%A1%E5%9B%AD%E7%BD%91%E5%85%8D%E8%AE%A4%E8%AF%81%E4%B8%8A%E7%BD%91/index.html">
+<meta property="og:site_name" content="文一刀">
+<meta property="og:description" content="有东西被加密了, 请输入密码查看.">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://img.uuhu.de/file/1750642545526_20170227173736_yWa2R.webp">
+<meta property="article:published_time" content="2023-01-03T03:23:00.000Z">
+<meta property="article:modified_time" content="2025-06-23T18:16:12.493Z">
+<meta property="article:author" content="First">
+<meta property="article:tag" content="加密">
+<meta property="article:tag" content="校园网">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://img.uuhu.de/file/1750642545526_20170227173736_yWa2R.webp">
+  
+  
+  
+  <meta name="keywords" content="加密,校园网">
+
+  <!-- feed -->
+  
+
+  <link rel="stylesheet" href="/css/main.css?v=1.31.0">
+
+
+  
+    <link rel="shortcut icon" href="https://img.uuhu.de/file/1750651854207_1.ico">
+  
+
+  
+
+  <link href="https://fonts.googleapis.com/css2?family=Lobster&family=Ma+Shan+Zheng&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="l_body content" id="start" layout="post" type="tech" ><aside class="l_left"><div class="sidebg"></div><div class="leftbar-container">
+
+
+<header class="header"><div class="logo-wrap"><a class="avatar" href="/about/"><div class="bg" style="opacity:0;background-image:url(https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/rainbow64@3x.webp);"></div><img no-lazy class="avatar" src="https://img.uuhu.de/file/1750642545526_20170227173736_yWa2R.webp" onerror="javascript:this.classList.add('error');this.src='https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/image/2659360.svg';"></a><a class="title" href="/"><div class="main" ff="title">文一刀</div><div class="sub normal cap">网络流浪者</div><div class="sub hover cap" style="opacity:0"> Internet vagabond</div></a></div></header>
+
+<div class="nav-area">
+<div class="search-wrapper" id="search-wrapper"><form class="search-form"><a class="search-button" onclick="document.getElementById(&quot;search-input&quot;).focus();"><svg t="1705074644177" viewBox="0 0 1025 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1560" width="200" height="200"><path d="M1008.839137 935.96571L792.364903 719.491476a56.783488 56.783488 0 0 0-80.152866 0 358.53545 358.53545 0 1 1 100.857314-335.166073 362.840335 362.840335 0 0 1-3.689902 170.145468 51.248635 51.248635 0 1 0 99.217358 26.444296 462.057693 462.057693 0 1 0-158.255785 242.303546l185.930047 185.725053a51.248635 51.248635 0 0 0 72.568068 0 51.248635 51.248635 0 0 0 0-72.978056z" p-id="1561"></path><path d="M616.479587 615.969233a50.428657 50.428657 0 0 0-61.498362-5.534852 174.655348 174.655348 0 0 1-177.525271 3.484907 49.403684 49.403684 0 0 0-58.833433 6.76482l-3.074918 2.869923a49.403684 49.403684 0 0 0 8.609771 78.10292 277.767601 277.767601 0 0 0 286.992355-5.739847 49.403684 49.403684 0 0 0 8.404776-76.667958z" p-id="1562"></path></svg></a><input type="text" class="search-input" id="search-input" placeholder="站内搜索"></form><div id="search-result"></div><div class="search-no-result">没有找到内容！</div></div>
+
+
+<nav class="menu dis-select"><a class="nav-item active" title="博客" href="/" style="color:#1BCDFC"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M5.879 2.879C5 3.757 5 5.172 5 8v8c0 2.828 0 4.243.879 5.121C6.757 22 8.172 22 11 22h2c2.828 0 4.243 0 5.121-.879C19 20.243 19 18.828 19 16V8c0-2.828 0-4.243-.879-5.121C17.243 2 15.828 2 13 2h-2c-2.828 0-4.243 0-5.121.879M8.25 17a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 0 1.5H9a.75.75 0 0 1-.75-.75M9 12.25a.75.75 0 0 0 0 1.5h6a.75.75 0 0 0 0-1.5zM8.25 9A.75.75 0 0 1 9 8.25h6a.75.75 0 0 1 0 1.5H9A.75.75 0 0 1 8.25 9" clip-rule="evenodd"/><path fill="currentColor" d="M5.235 4.058C5 4.941 5 6.177 5 8v8c0 1.823 0 3.058.235 3.942L5 19.924c-.975-.096-1.631-.313-2.121-.803C2 18.243 2 16.828 2 14v-4c0-2.829 0-4.243.879-5.121c.49-.49 1.146-.707 2.121-.803zm13.53 15.884C19 19.058 19 17.822 19 16V8c0-1.823 0-3.059-.235-3.942l.235.018c.975.096 1.631.313 2.121.803C22 5.757 22 7.17 22 9.999v4c0 2.83 0 4.243-.879 5.122c-.49.49-1.146.707-2.121.803z" opacity=".5"/></svg></a><a class="nav-item" title="关于" href="/about/" style="color:#3DC550"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M14.25 4.48v3.057c0 .111 0 .27.02.406a.936.936 0 0 0 .445.683a.96.96 0 0 0 .783.072c.13-.04.272-.108.378-.159L17 8.005l1.124.534c.106.05.248.119.378.16a.958.958 0 0 0 .783-.073a.936.936 0 0 0 .444-.683c.021-.136.021-.295.021-.406V3.031c.113-.005.224-.01.332-.013C21.154 2.98 22 3.86 22 4.933v11.21c0 1.112-.906 2.01-2.015 2.08c-.97.06-2.108.179-2.985.41c-1.082.286-1.99 1.068-3.373 1.436c-.626.167-1.324.257-1.627.323V5.174c.32-.079 1.382-.203 1.674-.371c.184-.107.377-.216.576-.323m5.478 8.338a.75.75 0 0 1-.546.91l-4 1a.75.75 0 0 1-.364-1.456l4-1a.75.75 0 0 1 .91.546" clip-rule="evenodd"/><path fill="currentColor" d="M18.25 3.151c-.62.073-1.23.18-1.75.336a8.2 8.2 0 0 0-.75.27v3.182l.75-.356l.008-.005a1.13 1.13 0 0 1 .492-.13c.047 0 .094.004.138.01c.175.029.315.1.354.12l.009.005l.749.356V3.647z"/><path fill="currentColor" d="M12 5.214c-.334-.064-1.057-.161-1.718-.339C8.938 4.515 8.05 3.765 7 3.487c-.887-.234-2.041-.352-3.018-.412C2.886 3.007 2 3.9 2 4.998v11.146c0 1.11.906 2.01 2.015 2.079c.97.06 2.108.179 2.985.41c.486.129 1.216.431 1.873.726c1.005.451 2.052.797 3.127 1.034z" opacity=".5"/><path fill="currentColor" d="M4.273 12.818a.75.75 0 0 1 .91-.545l4 1a.75.75 0 1 1-.365 1.455l-4-1a.75.75 0 0 1-.545-.91m.909-4.545a.75.75 0 1 0-.364 1.455l4 1a.75.75 0 0 0 .364-1.455z"/></svg></a><a class="nav-item" title="社交" href="/friends/" style="color:#F44336"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="m13.629 20.472l-.542.916c-.483.816-1.69.816-2.174 0l-.542-.916c-.42-.71-.63-1.066-.968-1.262c-.338-.197-.763-.204-1.613-.219c-1.256-.021-2.043-.098-2.703-.372a5 5 0 0 1-2.706-2.706C2 14.995 2 13.83 2 11.5v-1c0-3.273 0-4.91.737-6.112a5 5 0 0 1 1.65-1.651C5.59 2 7.228 2 10.5 2h3c3.273 0 4.91 0 6.113.737a5 5 0 0 1 1.65 1.65C22 5.59 22 7.228 22 10.5v1c0 2.33 0 3.495-.38 4.413a5 5 0 0 1-2.707 2.706c-.66.274-1.447.35-2.703.372c-.85.015-1.275.022-1.613.219c-.338.196-.548.551-.968 1.262" opacity=".5"/><path fill="currentColor" d="M10.99 14.308c-1.327-.978-3.49-2.84-3.49-4.593c0-2.677 2.475-3.677 4.5-1.609c2.025-2.068 4.5-1.068 4.5 1.609c0 1.752-2.163 3.615-3.49 4.593c-.454.335-.681.502-1.01.502c-.329 0-.556-.167-1.01-.502"/></svg></a></nav>
+</div>
+<div class="widgets">
+
+
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2023/01/03/%E8%87%AA%E5%BB%BA%E7%A7%81%E6%9C%89%20API%20%E6%8C%82%E8%BD%BDOneDrive/"><span class="title">自建私有 API 挂载OneDrive</span></a><a class="item title" href="/2023/07/15/%E8%AE%A2%E9%98%85%E8%BD%AC%E6%8D%A2%E6%90%AD%E5%BB%BA%E4%BF%AE%E6%94%B9%E7%89%88/"><span class="title">订阅转换搭建修改版</span></a><a class="item title" href="/2023/07/14/%E8%AE%A2%E9%98%85%E8%BD%AC%E6%8D%A2%E6%90%AD%E5%BB%BA%E5%8E%9F%E7%89%88%EF%BC%88%E5%89%8D%E5%90%8E%E7%AB%AF%EF%BC%89/"><span class="title">订阅转换搭建原版（前后端）</span></a><a class="item title" href="/2023/01/16/%E9%80%9A%E8%BF%87Origin%20Rules%E4%BD%BFCloudFlare%20CDN%E5%9B%9E%E6%BA%90%E4%BB%A5%E4%BD%BF%E7%94%A8%E4%BB%BB%E6%84%8F%E7%9A%84%E7%AB%AF%E5%8F%A3/"><span class="title">通过Origin Rules使CloudFlare CDN回源以使用任意的端口</span></a><a class="item title" href="/2024/05/01/%E9%83%A8%E7%BD%B2%E6%AF%8F%E6%97%A5%E5%A4%87%E4%BB%BDVPS%E9%87%8D%E8%A6%81%E6%95%B0%E6%8D%AE%E8%87%B3%E9%98%BF%E9%87%8C%E4%BA%91%E7%9B%98/"><span class="title">部署每日备份VPS重要数据至阿里云盘</span></a></div></widget>
+</div>
+
+</div></aside><div class="l_main" id="main">
+
+
+
+
+
+<div class="article banner top">
+  <div class="content">
+    <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
+<span class="sep"></span><a class="cap breadcrumb" href="/">文章</a><span class="sep"></span><a class="cap breadcrumb-link" href="/categories/%E7%AC%94%E8%AE%B0/">笔记</a></div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2023-01-03T03:23:00.000Z">2023-01-03</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2025-06-23T18:16:12.493Z">2025-06-24</time></span></div></div></div>
+    
+    <div class="bottom only-title">
+      
+      <div class="text-area">
+        <h1 class="text title"><span>通过UDP53实现校园网免认证上网</span></h1>
+        
+      </div>
+    </div>
+    
+  </div>
+  </div><article class="md-text content"><div class="hbe hbe-container" id="hexo-blog-encrypt" data-wpm="抱歉, 这个密码看着不太对, 请再试试." data-whm="抱歉, 这个文章不能被校验, 不过您还是能看看解密后的内容.">
+  <script id="hbeData" type="hbeData" data-hmacdigest="51570316089bb0d5c9b34d2f5c43dcff78c1e2a447faf3ff3cf59d35ba7e24a0">01928e5015c5461ac7a11f18052b40b0e3daae5dfdfea291b6b2f359d3e7268c57dffd9087dbe5a1dd7873323fcd127877de4ebc6bdd8aa8a521acf1a3b224740bc95b5e80f9dbfe764c9973d0b558c0694632c73f32ee1ec2b4b6a61335a06d10d15e49de311d9744e02c54fda5a84e5206800a0428a45fbe51a9bcdfba447d42fd221d5b64b0503c01b63c6e02355f98f8750c18ed144569c990a8df7016d59618c839752b63e490ebce5b9c38d7e5afd7766fad5df37a28b31a73fb65bd9ebf7e2608592a98ff827fc05a3d2d82b0ad4f6fe0e5a92eae45082f8718c3df3501030579cd7c9187e5ad6f6c38e464b4ec0bebb849f56d2c0e8945a2216c8bbdd45c586c5fff9dbf989cc356d11bfb79325c4862194017c4fb5704e9318079065014b50c0207858a2ca4998bcde887d39561c8f2f1e14e49e6ee6a99d4d1db337bed8e8c45f6e725befb05e394215e0c204b2019779c0ed2731f245ae064b294d5862650d785033de842fc7dda026106305b32c241314f0d031d36ecc55b43f5ae16c79680a1c7f651cc2f03c04f33991863969dae6d98eb7a7ceff23ff613a8dd1cfdbbcfdb10d2d43256a202d7516cf35d2a67508f37b7c1d22cdf87dd3caa829fd3016acba4d304e3ab010d5d2bf9a4bd45d6f1a66357facf89b0a1eae1b4dd2abfc502e1d8c9a0e3b57f65c9bd4ddb366df4029fa14383e93a0d85fe9ee16c053c59fb6060bb7b588665eefd7702980ff85f1f82bcd8943d3c74d73f409f49becb3524175bdf10a61516a97593069b2fbab4faa133fdc2d821a84cc33109d10212681a67c90564307c8ac7ed777c8932b0ed4a2af47bcf541f10c296809b9b91a1b13c822b4af632a380f85c460418af1ea1de17b285ca657a925b509e792bcab352620e7dc338e42d2c01c04e30bcc262e3a154b494084ca534107dede4be8ea210da47c17f93f4d4303141fdd098bbd41b0e16cb0e05d71aff3a7a24e56439a8c6751d87d456d5c58ef72f8d9fd5940337a07a52cde3ddaf4c742ec9c5f969adf6c3659f95fba3e9bbe61c76eb9678ae8ee98d3af1bacc2d81a9674614f3644ff8c011b7f19f11dd3699965c038ffc1eb4a0885855b296063cb489a31df65f2b2215116b4c833bdb1e390f28bd5dca2d4b59bc781a9bfac618d26dd876272e8380ce6d5640108f6b37d328c0adefd82557ae5fd69994fb2f8ecc5aaaf7fccf4952e07c0aa21bdb8a8b09227112c30f27b93cd27c43f489b54634f4c39080159c26603caf06a15571b3b7c7a28a98393d95a3c96a5a8c10ca59ccb485676ffde084cae3ef5ccf9d4c18fc6a40da0682315326b7ca36e30140028644d58d2a03a9a489eca20488f13d812629cd01b18da90523f253296d8da0b5cc6950c3cf062aeb89d84a0d6e6092f7f2e48ea56c07dc78d3f7e6adc8ad8d0b2fce00ac323f67c46d6a1d0606ccb17bdef6533acd055cd326b2edcc999999547240dc332fa272f7e064510de753c813745f81fc3a98b67c592ca0837633381019b3869e3a49ede7220b533183f92c2aebd65fd361b5b99d107ef9868ed27ac71725cc37bfba26aa9c6058d212c73d7461a21e165694351f7ad53b842aa898fb1f44d47e456ce90b0c045bdd444a1e89d8860e224fcca53beb3c52357583ae01a9ff85f86c9824691d6938199b22dca88c265089e1b84e56b52e900ee100b7267250163189f92ac681e15325528845838a9831b8cdd8d119444e32109c1d58131658adffd9d44bbcad16156320a2bbe84259fbf824769e62f7ca719728d357da05fe3c5477f0f9a66a43a96d017abb667a8324b5ed42d9bb09783dcb1a11664f64320f10a6cf7c33b703c9d6f7a225c09041e741974097ba6855db7e7a05e92f294d17c5baf4b8d6c160c7b798f38700928687a40801cad7b6ae5360d61d2e8aea8c27ab36a65b573403e10c4e037bae00e4611f5bd5ff824ca5d231febc6e606f0b2ab81b1cc08f832eaa1535583796fd09999724ebbab1126c1fdd1028ef2b04486773f14cfd4a475d8b2a1a6e282d4e0c5510f33f3e14d4052b9a9fb267a9fd8e0e3e5afef48d818cdbb04eb09e9a548daf0fa1eee2e492275442125a234076422edc49279ba98ddad1bb7e1680d7875026d4e8472a38ba675c912587aa9c95493139bffa25ff0d3dd7e1539399a104bebd8b0ab8023fa32a63c67ab4e74623489581dc2fc863ea8c6dd6d3b5fe28b55c09eae8299e631e321b0c69873f22898d3ea7cbefe20d804eb138b280e4a577965b88498848a02a039a86a9517f60771601b11b7cd1fb5ea63a97806da8d84c138cd497f68639966222e6d8831aa478e4e3d22234a6bedd02355d2161ee90b64ca56880e0824dc0b12dd7a5b53996addfb36d35d602ee72a0270facc7620ccc2889b0daf455578596360af8bb25f85f9bb801d8e48ecedec40c2c5a376d4467acab213137dcac9fbb0adc0fe688a9efd7001abbe31a8a2712504d749de5dce1513f43b5c7139202b49918f162fc64ebc24138c097c30cafc52504d39462a2317bca79a563097004d90275eb9440ab73fbe3f37de860f12b4a4c92272176c6deaa6ee008366d7bb81ecdd6b52c71130be9786b8eed771696151604daf3823b82abd666c11129038af3ca7d9196cdbfe3b6cce2068b2c3d077b3bbd8926e1a7b026543f506caaf4de3dec58a5c3934da31b885a132e757fda9e9f6bab1755cc103a0db8fcb674412a7956b38f9ffc6eff99e5549f8e2a910d0e71f4e9b6e9d3e3b6e7c421cf7e3b494ab3639bcf47768e5ba438c99195f4efb47f49e6c93582fa14616ba35775103f1dd61764cd739d536947907263ad7de5b9c4ca366ac967b5e408c535150d7f93383192fb80fc531e0e8359bace85ae84b913c10c1f86d1d90ef13a318926204fea7216c07d514561ac3f0c39e2a1838a0b557d02506a1c2ff4881cf8b895e321aa7f13a7d0a212dd5ab14857ab009b3d0eb16bb6392d242e1682c60e35c4d57e71d25b6265a840bb7179da28c0c7dd4910b003198688b5f22aec25271d3830af62ddf435313b4f99e0fd37fe79e4a268b6388f40245569e367f3f2dd290efd55e71c59ce573e7705ffdbd1d738f45bc90f71bf3ba757603587da9d10b852902324d0811c00dd2be60bfc92997de073bac91d9b43a9a92036c79cac52f3f7c5439f861502550f0a069b0ad7e6f40b4867c7c7479033ba67728b20275097981c0e02a2251aca07e0fb7485684c62e16bf8fe094596388acb78fa593849e577bd0965bc987588bc8124174a1ea96d6524ffb91db0762e489ab6c8bf3b03244b49cbed89c3fe6e052a81df3fbe4c9941423f066d7d989c37c884d76ac25f47bfcddb7583e5a735cc3b57bdf91c0d61ff09e50ab771b23f9b1f1ebe6d00b37da3703e870f220c2a1c249ca799e739d234c7529bfceb20e840bf904df9471d5af7d8220d5169fe46caf175301e01cd2d4de701e450be27eeb4a081342240e13ee0544ca11dd26837f317ebd7862ad49dae33a217bcca064f38f59687c5a99fd8e74af034a2e9f7af71c3773d308b27d3f3db5e4ebb4b1ae5e551a837d01b6ef099c5757ae9d11ec4da8c2d7977721fbb8520bc66f2a16ba8b38e4b482c26ca9c22dbf291d5865cda0118c235c75173bc21b88ce74ade74530f358744eccf6cd268c39efdfae82a9782bc00e8f278d11304f0792d2cfcb432abc3b215c6f8216eb8e0a4362922689ec07ac257b9c8e1774629fe817dcf1a7c1dad6eadc32a8607b1e1f03565d8d2ba7cfb362861920251971e86838edee2f007aa2b3fa2bb2ec9910aeafeccd14799924ef391813c1c3ca395555d9ac83f0c63c80bfba167c016cee95712adab3c9e671d0165dfec4383bdb1b129d3d2b43457a8b2c0fda6a0123f867729236e141fb2fb435503a34416ab7bbb3255da7413be885b632457329966306eb9a31faa3a6aeddcceb6004fb9b1fc343a81fd153381d3798db269aa28711d1642e607dd2d259694ca8b98addee068feb0c091007db86a75110ebfb40c018cb9db633847c94c5b7272d55bb3b17e9ecd0d303596814d33cd9ab29f54fdb549fdf50ac1740199736340bbb64e75c539a9d918f7373495f1af6298d1c7b88a1374fb9bf6b20670cfadd565b4f6e2e52029db009c57c86af2991665eb50c5037e09167a99eaeccacf37fbc23a92e03939c010b762932ba0b6656437f85f87114c8c9cff1b3d32113d2ba46c58ace784536a22f409e3f459a95ac06d4eee2ea8dcb55ee06dd338629c931410c0dcb168c69eec47fe916a4d67e1886f4538bb686d862800d54ca05d7bf36237ad70475927173bc0a30e92b8998463b3969767b7bceecd507187161e8e933078fd87993f594df5256d8625f5b772b9b0d0776ebd1bad8e2f0f568ab6d364747c02a2b9304313931a1f8b65ee6e4f2ad7a95c4711ce38c4f8ea1b919e27b801708a0114e6ac7694ff72bfcb186c6e88b1201f05a971e632741937dd20d300d54114f62bc017418015b4c9bec131354c0fb727f7c09a785969a9a0c7cfa46ecb328412900892e08b8ebfa944088e21863a3e73acd72b720ea455cdf08f144a82a57321ba7152ffe2e2d9cdcb2e4c81ab8b03c93494f3ffc658dcb5b416ac7e23ca95840fe3cea24efc932ebb226340a1517a1beb6091ff28c7d2a3b4d000afe50234b678feda09f19c9cf8e182012e17718c4364b6fbcfc4d75d98f83412003cadb251dd3305046d88f292b77fa890c368c009ae3ec7ae4f597d6dc9de5c615ebf3d6a35b2561d3c17500825365dc4698ac3602cd6662db377692154abbee73ad225eab8b1e4c808ff37e4e52d163b6297924e611929a6d12a1e41326d48c4bfab69d8fe403e084bcd09ba652bc4e4558174895eb46cea629452df38a4a692b9b33a935c288e8ce188b8cb451c43bf7665dd04b6c2893804cb9f227c16f37143e20c11ec80b008da9ef92af466c04ae829fc23040e7028657e84c2a71d61de0ba8b738abf9e986d3cacf4957d8939f4f36c344b4cffa95058e7a55b551fb8ce7a6e373b663a8a47d825dfe1d8fbd41bebe0ab0d4b435077d58e4dc879055e7580bfdb6118190fb774919e9812ce0d1ee2c8c93e7af869219edca2d411eef6f5497f2389732f4b6fcd2c09d85f3f59fb84141f75988ddaa0232913e76b5fcfd726148f6c624442db58737ab3fb8945703238883cd92cb7ae91c96b479ac65222b31c5e36ed23bcf7f8b24de9fbc4cc8178efc8284ac977f7338b9f5417234537234e1812193cc2e92540602d1a46356d31fb4f0a9eb460d34cc761593ec39172616daeb181eddc8f5ef3f5a746de26f148e39641c0d2e28c4385bf61dd6e395492f71e1ed44ed7de30edb60f2afa9a349a98d5e459ba0e8f2d2da856c27ca2b6fe0e141e83a4b7dd633049243964f6c580c0800ddf13c84a1f05bd0acc3ec15e2fc10e39981b02ae323c1dc145e995ef024d6747fb54ab8691951262ee024df19499be51c6f5d147bb1c5f075e4f9adbcd928869c92fdeacccd6bc672b5b345f9fbaf173435281ccf7036380eb2e2cf992af9164d38af85f3f189670b32d2b701e5d18f9d46f3ccf3ff3f26c25e5fe7cc050aaae7a000092bbf3ff6df559ba48cb956459a724ebe6b0fd8118fe0bbdd416e55aafcc3029ded64ca3e7d9b450d1c552d947e112c567805466dcb31d9b8c654de</script>
+  <div class="hbe hbe-content">
+    <div class="hbe hbe-input hbe-input-shrink">
+      <input class="hbe hbe-input-field hbe-input-field-shrink" type="password" id="hbePass">
+      <label class="hbe hbe-input-label hbe-input-label-shrink" for="hbePass">
+        <span class="hbe hbe-input-label-content hbe-input-label-content-shrink">您好, 这里需要密码.</span>
+      </label>
+    </div>
+  </div>
+</div>
+<script data-pjax src="/lib/hbe.js"></script><link href="/css/hbe.style.css" rel="stylesheet" type="text/css"></article>
+<div class="article-footer">
+    <section id="license">
+      <div class="header"><span>许可协议</span></div>
+      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
+</div>
+    </section>
+    
+    <section id="share">
+      <div class="header"><span>分享文章</span></div>
+      <div class="body">
+        <div class="link"><input class="copy-area" readonly="true" id="copy-link" value="http://example.com/2023/01/03/%E9%80%9A%E8%BF%87UDP53%E5%AE%9E%E7%8E%B0%E6%A0%A1%E5%9B%AD%E7%BD%91%E5%85%8D%E8%AE%A4%E8%AF%81%E4%B8%8A%E7%BD%91/" /></div>
+        <div class="social-wrap dis-select"><a class="social share-item wechat" onclick="util.toggle(&quot;qrcode-wechat&quot;)"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/b32ef3da1162a.svg" /></a><a class="social share-item weibo" target="_blank" rel="external nofollow noopener noreferrer" href="https://service.weibo.com/share/share.php?url=http://example.com/2023/01/03/%E9%80%9A%E8%BF%87UDP53%E5%AE%9E%E7%8E%B0%E6%A0%A1%E5%9B%AD%E7%BD%91%E5%85%8D%E8%AE%A4%E8%AF%81%E4%B8%8A%E7%BD%91/&title=通过UDP53实现校园网免认证上网 - 文一刀&pics=https://img.uuhu.de/file/hexo/1750680391586_UPD53.webp&summary=有东西被加密了, 请输入密码查看."><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/80c07e4dbb303.svg" /></a><a class="social share-item email" href="mailto:?subject=通过UDP53实现校园网免认证上网 - 文一刀&amp;body=http://example.com/2023/01/03/%E9%80%9A%E8%BF%87UDP53%E5%AE%9E%E7%8E%B0%E6%A0%A1%E5%9B%AD%E7%BD%91%E5%85%8D%E8%AE%A4%E8%AF%81%E4%B8%8A%E7%BD%91/"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/a1b00e20f425d.svg" /></a><a class="social share-item link" onclick="util.copy(&quot;copy-link&quot;, &quot;复制成功&quot;)"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/8411ed322ced6.svg" /></a></div>
+        
+        <div class="qrcode" id="qrcode-wechat" style="opacity:0;height:0">
+          <img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://api.qrserver.com/v1/create-qr-code/?size=256x256&data=http://example.com/2023/01/03/%E9%80%9A%E8%BF%87UDP53%E5%AE%9E%E7%8E%B0%E6%A0%A1%E5%9B%AD%E7%BD%91%E5%85%8D%E8%AE%A4%E8%AF%81%E4%B8%8A%E7%BD%91/"/>
+        </div>
+        
+      </div>
+    </section>
+    </div>
+
+<div class="related-wrap" id="read-next"><section class="body"><div class="item" id="prev"><div class="note">较新文章</div><a href="/2023/01/03/%E4%BD%BF%E7%94%A8tg%E6%9C%BA%E5%99%A8%E4%BA%BA%E8%87%AA%E5%8A%A8%E4%B8%8B%E8%BD%BD%E5%B9%B6%E4%B8%8A%E4%BC%A0%E9%A2%91%E9%81%93%E5%86%85%E6%96%87%E4%BB%B6%E5%88%B0%E6%9C%AC%E5%9C%B0&%E7%BD%91%E7%9B%98/">使用tg机器人自动下载并上传频道内文件到本地&网盘</a></div><div class="item" id="next"><div class="note">较早文章</div><a href="/2023/01/03/Rclone%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4%E5%8F%82%E6%95%B0/">Rclone常用命令参数</a></div></section></div>
+
+<div class="related-wrap" id="related-posts">
+    <section class='header'>
+      <div class='title cap theme'>您可能感兴趣的文章</div>
+    </section>
+    <section class='body'>
+    <div class="related-posts"><a class="item" href="/2024/04/14/sing-box+hy2绕过校园网认证/" title="sing-box+hy2绕过校园网认证"><span class="title">sing-box+hy2绕过校园网认证</span><span class="excerpt">有东西被加密了, 请输入密码查看.</span></a><a class="item" href="/2024/01/13/Cloudflare优选IP 自动DDNS Shell脚本/" title="Cloudflare优选IP 自动DDNS Shell脚本"><span class="title">Cloudflare优选IP 自动DDNS Shell脚本</span><span class="excerpt">有东西被加密了, 请输入密码查看.</span></a><a class="item" href="/2024/06/19/Verilog交通灯存档/" title="Verilog交通灯存档"><span class="title">Verilog交通灯存档</span><span class="excerpt">有东西被加密了, 请输入密码查看.</span></a><a class="item" href="/2024/01/13/爬取别人网站的优选反代IP/" title="爬取别人网站的优选反代IP"><span class="title">爬取别人网站的优选反代IP</span><span class="excerpt">有东西被加密了, 请输入密码查看.</span></a><a class="item" href="/2023/01/05/ARM框架搭建MTP代理/" title="ARM框架搭建MTP代理"><span class="title">ARM框架搭建MTP代理</span></a></div></section></div>
+
+
+  <div class="related-wrap md-text" id="comments">
+    <section class='header cmt-title cap theme'>
+      <p>快来参与讨论吧~</p>
+
+    </section>
+    <section class='body cmt-body twikoo'>
+      
+
+<div id="twikoo_container"><svg class="loading" style="vertical-align:middle;fill:currentColor;overflow:hidden;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2709"><path d="M832 512c0-176-144-320-320-320V128c211.2 0 384 172.8 384 384h-64zM192 512c0 176 144 320 320 320v64C300.8 896 128 723.2 128 512h64z" p-id="2710"></path></svg></div>
+    </section>
+  </div>
+
+
+
+<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">First</a> 使用 <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.31.0">Stellar 1.31.0</a> 主题创建。<br>本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
+</div></footer>
+<div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
+</aside><div class='float-panel'>
+  <button type='button' style='display:none' class='laptop-only rightbar-toggle mobile' onclick='sidebar.rightbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>
+  </button>
+  <button type='button' style='display:none' class='mobile-only leftbar-toggle mobile' onclick='sidebar.leftbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 11c0-3.771 0-5.657 1.172-6.828C4.343 3 6.229 3 10 3h4c3.771 0 5.657 0 6.828 1.172C22 5.343 22 7.229 22 11v2c0 3.771 0 5.657-1.172 6.828C19.657 21 17.771 21 14 21h-4c-3.771 0-5.657 0-6.828-1.172C2 18.657 2 16.771 2 13z"/><path id="sep" stroke-linecap="round" d="M5.5 10h6m-5 4h4m4.5 7V3"/></g></svg>
+  </button>
+</div>
+</div><div class="scripts"><script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"First","sameAs":[],"image":"https://img.uuhu.de/file/1750642545526_20170227173736_yWa2R.webp"},"dateCreated":"2023-01-03T11:23:00+08:00","dateModified":"2025-06-24T02:16:12+08:00","datePublished":"2023-01-03T11:23:00+08:00","description":"有东西被加密了, 请输入密码查看.","headline":"通过UDP53实现校园网免认证上网","mainEntityOfPage":{"@type":"WebPage","@id":"http://example.com/2023/01/03/%E9%80%9A%E8%BF%87UDP53%E5%AE%9E%E7%8E%B0%E6%A0%A1%E5%9B%AD%E7%BD%91%E5%85%8D%E8%AE%A4%E8%AF%81%E4%B8%8A%E7%BD%91/"},"publisher":{"@type":"Organization","name":"First","sameAs":[],"image":"https://img.uuhu.de/file/1750642545526_20170227173736_yWa2R.webp","logo":{"@type":"ImageObject","url":"https://img.uuhu.de/file/1750642545526_20170227173736_yWa2R.webp"}},"url":"http://example.com/2023/01/03/%E9%80%9A%E8%BF%87UDP53%E5%AE%9E%E7%8E%B0%E6%A0%A1%E5%9B%AD%E7%BD%91%E5%85%8D%E8%AE%A4%E8%AF%81%E4%B8%8A%E7%BD%91/","keywords":"加密, 校园网","thumbnailUrl":"https://img.uuhu.de/file/hexo/1750680391586_UPD53.webp","image":1}</script>
+
+
+<script type="text/javascript">
+  window.canonical = {"originalHost":null,"officialHosts":["localhost"],"encoded":""};
+  const ctx = {
+    date_suffix: {
+      just: `刚刚`,
+      min: `分钟前`,
+      hour: `小时前`,
+      day: `天前`,
+    },
+    root : `/`,
+    tag_plugins: {
+      chat: Object.assign({"api":"https://siteinfo.listentothewind.cn/api/v1"}),
+    }
+  };
+
+  // required plugins (only load if needs)
+  if (`local_search`) {
+    ctx.search = {};
+    ctx.search.service = `local_search`;
+    if (ctx.search.service == 'local_search') {
+      let service_obj = Object.assign({}, `{"field":"all","path":"/search.json","content":true,"skip_search":[],"codeblock":true,"sort":"-date"}`);
+      ctx.search[ctx.search.service] = service_obj;
+    }
+  }
+  const def = {
+    avatar: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/3442075.svg`,
+    cover: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/cover/76b86c0226ffd.svg`,
+  };
+  const deps = {
+    jquery: `https://gcore.jsdelivr.net/npm/jquery@3.7/dist/jquery.min.js`,
+    marked: `https://gcore.jsdelivr.net/npm/marked@13.0/lib/marked.umd.min.js`
+  }
+  
+
+</script>
+
+<script type="text/javascript">
+  function RunItem() {
+    this.list = []; // 存放回调函数
+    this.start = () => {
+      for (var i = 0; i < this.list.length; i++) {
+        this.list[i].run();
+      }
+    };
+    this.push = (fn, name, setRequestAnimationFrame = true) => {
+      let myfn = fn
+      if (setRequestAnimationFrame) {
+        myfn = () => {
+          utils.requestAnimationFrame(fn)
+        }
+      }
+      var f = new Item(myfn, name);
+      this.list.push(f);
+    };
+    this.remove = (name) => {
+      for (let index = 0; index < this.list.length; index++) {
+        const e = this.list[index];
+        if (e.name == name) {
+          this.list.splice(index, 1);
+        }
+      }
+    }
+    // 构造一个可以run的对象
+    function Item(fn, name) {
+      // 函数名称
+      this.name = name || fn.name;
+      // run方法
+      this.run = () => {
+        try {
+          fn()
+        } catch (error) {
+          console.log(error);
+        }
+      };
+    }
+  }
+
+  const utils = {
+    // 懒加载 css https://github.com/filamentgroup/loadCSS
+    css: (href, before, media, attributes) => {
+      var doc = window.document;
+      var ss = doc.createElement("link");
+      var ref;
+      if (before) {
+        ref = before;
+      } else {
+        var refs = (doc.body || doc.getElementsByTagName("head")[0]).childNodes;
+        ref = refs[refs.length - 1];
+      }
+      var sheets = doc.styleSheets;
+      if (attributes) {
+        for (var attributeName in attributes) {
+          if (attributes.hasOwnProperty(attributeName)) {
+            ss.setAttribute(attributeName, attributes[attributeName]);
+          }
+        }
+      }
+      ss.rel = "stylesheet";
+      ss.href = href;
+      ss.media = "only x";
+      function ready(cb) {
+        if (doc.body) {
+          return cb();
+        }
+        setTimeout(function () {
+          ready(cb);
+        });
+      }
+      ready(function () {
+        ref.parentNode.insertBefore(ss, before ? ref : ref.nextSibling);
+      });
+      var onloadcssdefined = function (cb) {
+        var resolvedHref = ss.href;
+        var i = sheets.length;
+        while (i--) {
+          if (sheets[i].href === resolvedHref) {
+            return cb();
+          }
+        }
+        setTimeout(function () {
+          onloadcssdefined(cb);
+        });
+      };
+      function loadCB() {
+        if (ss.addEventListener) {
+          ss.removeEventListener("load", loadCB);
+        }
+        ss.media = media || "all";
+      }
+      if (ss.addEventListener) {
+        ss.addEventListener("load", loadCB);
+      }
+      ss.onloadcssdefined = onloadcssdefined;
+      onloadcssdefined(loadCB);
+      return ss;
+    },
+
+    js: (src, opt) => new Promise((resolve, reject) => {
+      var script = document.createElement('script');
+      if (src.startsWith('/')) {
+        src = ctx.root + src.substring(1);
+      }
+      script.src = src;
+      if (opt) {
+        for (let key of Object.keys(opt)) {
+          script[key] = opt[key]
+        }
+      } else {
+        // 默认异步，如果需要同步，第二个参数传入 {} 即可
+        script.async = true
+      }
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function () {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    }),
+
+    jq: (fn) => {
+      if (typeof jQuery === 'undefined') {
+        utils.js(deps.jquery).then(fn)
+      } else {
+        fn()
+      }
+    },
+
+    onLoading: (el) => {
+      if (el) {
+        $(el).append('<div class="loading-wrap"><svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" stroke-opacity=".3" d="M12 3C16.9706 3 21 7.02944 21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="1.3s" values="60;0"/></path><path stroke-dasharray="15" stroke-dashoffset="15" d="M12 3C16.9706 3 21 7.02944 21 12"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.3s" values="15;0"/><animateTransform attributeName="transform" dur="1.5s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"/></path></g></svg></div>');
+      }
+    },
+    onLoadSuccess: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap').remove();
+      }
+    },
+    onLoadFailure: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap svg').remove();
+        $(el).find('.loading-wrap').append('<svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" d="M12 3L21 20H3L12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.5s" values="60;0"/></path><path stroke-dasharray="6" stroke-dashoffset="6" d="M12 10V14"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.6s" dur="0.2s" values="6;0"/></path></g><circle cx="12" cy="17" r="1" fill="currentColor" fill-opacity="0"><animate fill="freeze" attributeName="fill-opacity" begin="0.8s" dur="0.4s" values="0;1"/></circle></svg>');
+        $(el).find('.loading-wrap').addClass('error');
+      }
+    },
+    request: (el, url, callback, onFailure) => {
+      let retryTimes = 3;
+      utils.onLoading(el);
+      function req() {
+        return new Promise((resolve, reject) => {
+          let status = 0; // 0 等待 1 完成 2 超时
+          let timer = setTimeout(() => {
+            if (status === 0) {
+              status = 2;
+              timer = null;
+              reject('请求超时');
+              if (retryTimes == 0) {
+                onFailure();
+              }
+            }
+          }, 5000);
+          fetch(url).then(function (response) {
+            if (status !== 2) {
+              clearTimeout(timer);
+              resolve(response);
+              timer = null;
+              status = 1;
+            }
+            if (response.ok) {
+              return response;
+            }
+            throw new Error('Network response was not ok.');
+          }).then(function (data) {
+            retryTimes = 0;
+            utils.onLoadSuccess(el);
+            callback(data);
+          }).catch(function (error) {
+            if (retryTimes > 0) {
+              retryTimes -= 1;
+              setTimeout(() => {
+                req();
+              }, 5000);
+            } else {
+              utils.onLoadFailure(el);
+              onFailure();
+            }
+          });
+        });
+      }
+      req();
+    },
+    /********************** requestAnimationFrame ********************************/
+    // 1、requestAnimationFrame 会把每一帧中的所有 DOM 操作集中起来，在一次重绘或回流中就完成，并且重绘或回流的时间间隔紧紧跟随浏览器的刷新频率，一般来说，这个频率为每秒60帧。
+    // 2、在隐藏或不可见的元素中，requestAnimationFrame 将不会进行重绘或回流，这当然就意味着更少的的 cpu，gpu 和内存使用量。
+    requestAnimationFrame: (fn) => {
+      if (!window.requestAnimationFrame) {
+        window.requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame;
+      }
+      window.requestAnimationFrame(fn)
+    },
+    dark: {},
+  };
+
+  // utils.dark.mode 当前模式 dark or light
+  // utils.dark.toggle() 暗黑模式触发器
+  // utils.dark.push(callBack[,"callBackName"]) 传入触发器回调函数
+  utils.dark.method = {
+    toggle: new RunItem(),
+  };
+  utils.dark = Object.assign(utils.dark, {
+    push: utils.dark.method.toggle.push,
+  });
+</script>
+<script>
+  const sidebar = {
+    leftbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    rightbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('rightbar');
+        l_body.removeAttribute('leftbar');
+      }
+    },
+    dismiss: () => {
+      if (l_body) {
+        l_body.removeAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    toggleTOC: () => {
+      document.querySelector('#data-toc').classList.toggle('collapse');
+    }
+  }
+</script>
+<script type="text/javascript">
+  (() => {
+    const tagSwitchers = document.querySelectorAll('.tag-subtree.parent-tag > a > .tag-switcher-wrapper')
+    for (const tagSwitcher of tagSwitchers) {
+      tagSwitcher.addEventListener('click', (e) => {
+        const parent = e.target.closest('.tag-subtree.parent-tag')
+        parent.classList.toggle('expanded')
+        e.preventDefault()
+      })
+    }
+
+    // Get active tag from query string, then activate it.
+    const urlParams = new URLSearchParams(window.location.search)
+    const activeTag = urlParams.get('tag')
+    if (activeTag) {
+      let tag = document.querySelector(`.tag-subtree[data-tag="${activeTag}"]`)
+      if (tag) {
+        tag.querySelector('a').classList.add('active')
+        
+        while (tag) {
+          tag.classList.add('expanded')
+          tag = tag.parentElement.closest('.tag-subtree.parent-tag')
+        }
+      }
+    }
+  })()
+</script>
+
+
+<!-- required -->
+<script src="/js/main.js?v=1.31.0" defer></script>
+
+<script type="text/javascript">
+  const applyTheme = (theme) => {
+    if (theme === 'auto') {
+      document.documentElement.removeAttribute('data-theme')
+    } else {
+      document.documentElement.setAttribute('data-theme', theme)
+    }
+
+    applyThemeToGiscus(theme)
+  }
+
+  const applyThemeToGiscus = (theme) => {
+    theme = theme === 'auto' ? 'preferred_color_scheme' : theme
+
+    const cmt = document.getElementById('giscus')
+    if (cmt) {
+      // This works before giscus load.
+      cmt.setAttribute('data-theme', theme)
+    }
+
+    const iframe = document.querySelector('#comments > section.giscus > iframe')
+    if (iframe) {
+      // This works after giscus loaded.
+      const src = iframe.src
+      const newSrc = src.replace(/theme=[\w]+/, `theme=${theme}`)
+      iframe.src = newSrc
+    }
+  }
+
+  const switchTheme = () => {
+    // light -> dark -> auto -> light -> ...
+    const currentTheme = document.documentElement.getAttribute('data-theme')
+    let newTheme;
+    switch (currentTheme) {
+      case 'light':
+        newTheme = 'dark'
+        break
+      case 'dark':
+        newTheme = 'auto'
+        break
+      default:
+        newTheme = 'light'
+    }
+    applyTheme(newTheme)
+    window.localStorage.setItem('Stellar.theme', newTheme)
+    utils.dark.mode = newTheme === 'auto' ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light") : newTheme;
+    utils.dark.method.toggle.start();
+
+    const messages = {
+      light: `切换到浅色模式`,
+      dark: `切换到深色模式`,
+      auto: `切换到跟随系统配色`,
+    }
+    hud?.toast?.(messages[newTheme])
+  }
+
+  (() => {
+    // Apply user's preferred theme, if any.
+    const theme = window.localStorage.getItem('Stellar.theme')
+    if (theme !== null) {
+      applyTheme(theme)
+    } else {
+      utils.dark.mode = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    }
+    utils.dark.method.toggle.start();
+  })()
+</script>
+
+
+<!-- optional -->
+
+  <script type="module">
+  const el = document.getElementById('twikoo_container');
+  util.viewportLazyload(el, load_twikoo, false);
+
+  function load_twikoo() {
+    if (!el) return;
+    utils.js('https://gcore.jsdelivr.net/npm/twikoo@1.6/dist/twikoo.all.min.js', {defer: true}).then(function () {
+      const path = el.getAttribute('comment_id') ?? decodeURI(window.location.pathname);
+      twikoo.init(Object.assign({"js":"https://gcore.jsdelivr.net/npm/twikoo@1.6/dist/twikoo.all.min.js","envId":"https://twikoo.uuhu.de"}, {
+        el: '#twikoo_container',
+        path: path,
+      }));
+    });
+  }
+</script>
+
+
+
+<script defer>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.services = Object.assign({}, JSON.parse(`{"mdrender":{"js":"/js/services/mdrender.js"},"siteinfo":{"js":"/js/services/siteinfo.js","api":null},"ghinfo":{"js":"/js/services/ghinfo.js"},"sites":{"js":"/js/services/sites.js"},"friends":{"js":"/js/services/friends.js"},"friends_and_posts":{"js":"/js/services/friends_and_posts.js"},"timeline":{"js":"/js/services/timeline.js"},"fcircle":{"js":"/js/services/fcircle.js"},"weibo":{"js":"/js/services/weibo.js"},"memos":{"js":"/js/services/memos.js"},"voice":{"js":"/js/plugins/voice.js"},"video":{"js":"/js/plugins/video.js"},"download-file":{"js":"/js/plugins/download-file.js"},"twikoo":{"js":"/js/services/twikoo_latest_comment.js"},"waline":{"js":"/js/services/waline_latest_comment.js"},"artalk":{"js":"/js/services/artalk_latest_comment.js"},"giscus":{"js":"/js/services/giscus_latest_comment.js"}}`));
+    for (let id of Object.keys(ctx.services)) {
+      const js = ctx.services[id].js;
+      if (id == 'siteinfo') {
+        ctx.cardlinks = document.querySelectorAll('a.link-card[cardlink]');
+        if (ctx.cardlinks?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            setCardLink(ctx.cardlinks);
+          });
+        }
+      } else if (id == 'voice') {
+        ctx.voiceAudios = document.querySelectorAll('.voice>audio');
+        if (ctx.voiceAudios?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            createVoiceDom(ctx.voiceAudios);
+          });
+        }
+      } else if (id == 'video') {
+        ctx.videos = document.querySelectorAll('.video>video');
+        if (ctx.videos?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            videoEvents(ctx.videos);
+          });
+        }
+      } else if (id == 'download-file') {
+        ctx.files = document.querySelectorAll('.file');
+        if (ctx.files?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            downloadFileEvent(ctx.files);
+          });
+        }
+      } else {
+        const els = document.getElementsByClassName(`ds-${id}`);
+        if (els?.length > 0) {
+          utils.jq(() => {
+            if (id == 'timeline' || 'memos' || 'marked') {
+              utils.js(deps.marked).then(function () {
+                utils.js(js, { defer: true });
+              });
+            } else {
+              utils.js(js, { defer: true });
+            }
+          });
+        }
+      }
+    }
+
+    // chat iphone time
+    let phoneTimes = document.querySelectorAll('.chat .status-bar .time');
+
+    if (phoneTimes.length > 0) {
+      NowTime();
+      var date = new Date();
+      var sec = date.getSeconds();
+      var firstAdjustInterval = setInterval(firstAdjustTime, 1000 * (60 - sec));
+    }
+
+    function firstAdjustTime() {
+      NowTime();
+      clearInterval(firstAdjustInterval);
+      setInterval(NowTime, 1000 * 60);
+    }
+
+    function NowTime() {
+      for (let i = 0; i < phoneTimes.length; ++i) {
+        var timeSpan = phoneTimes[i];
+        var date = new Date();
+        var hour = date.getHours();
+        var min = date.getMinutes();
+        timeSpan.innerHTML = check(hour) + ":" + check(min);
+      }
+    };
+
+    function check(val) {
+      if (val < 10) {
+        return ("0" + val);
+      }
+      return (val);
+    }
+
+    // chat quote
+    const chat_quote_obverser = new IntersectionObserver((entries, observer) => {
+      entries.filter((entry) => { return entry.isIntersecting }).sort((a, b) => a.intersectionRect.y !== b.intersectionRect.y ? a.intersectionRect.y - b.intersectionRect.y : a.intersectionRect.x - b.intersectionRect.x).forEach((entry, index) => {
+          observer.unobserve(entry.target);
+          setTimeout(() => {
+            entry.target.classList.add('quote-blink');
+            setTimeout(() => {
+              entry.target.classList.remove('quote-blink');
+            }, 1000);
+          }, Math.max(100, 16) * (index + 1));
+        });
+    });
+
+    var chatQuotes = document.querySelectorAll(".chat .talk .quote");
+    chatQuotes.forEach((quote) => {
+      quote.addEventListener('click', function () {
+        var chatCellDom = document.getElementById("quote-" + quote.getAttribute("quotedCellTag"));
+        if (chatCellDom) {
+          var chatDiv = chatCellDom.parentElement;
+          var mid = chatDiv.clientHeight / 2;
+          var offsetTop = chatCellDom.offsetTop;
+          if (offsetTop > mid - chatCellDom.clientHeight / 2) {
+            chatDiv.scrollTo({
+              top: chatCellDom.offsetTop - mid + chatCellDom.clientHeight / 2,
+              behavior: "smooth"
+            });
+          } else {
+            chatDiv.scrollTo({
+              top: 0,
+              behavior: "smooth"
+            });
+          }
+          chat_quote_obverser.observe(chatCellDom);
+        }
+      });
+    });
+  });
+</script>
+
+<script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.search = {
+      path: `/search.json`,
+    }
+    utils.js('/js/search/local-search.js', { defer: true });
+  });
+</script><script>
+  window.FPConfig = {
+    delay: 0,
+    ignoreKeywords: [],
+    maxRPS: 5,
+    hoverDelay: 25
+  };
+</script>
+<script defer src="https://gcore.jsdelivr.net/npm/flying-pages@2/flying-pages.min.js"></script><script defer src="https://gcore.jsdelivr.net/npm/vanilla-lazyload@19.1/dist/lazyload.min.js"></script>
+<script>
+  // https://www.npmjs.com/package/vanilla-lazyload
+  // Set the options globally
+  // to make LazyLoad self-initialize
+  window.lazyLoadOptions = {
+    elements_selector: ".lazy",
+  };
+  // Listen to the initialization event
+  // and get the instance of LazyLoad
+  window.addEventListener(
+    "LazyLoad::Initialized",
+    function (event) {
+      window.lazyLoadInstance = event.detail.instance;
+    },
+    false
+  );
+  document.addEventListener('DOMContentLoaded', function () {
+    window.lazyLoadInstance?.update();
+  });
+</script><script>
+  ctx.fancybox = {
+    selector: `.timenode p>img`,
+    css: `https://gcore.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.css`,
+    js: `https://gcore.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.umd.js`
+  };
+  var selector = '[data-fancybox]:not(.error)';
+  if (ctx.fancybox.selector) {
+    selector += `, ${ctx.fancybox.selector}`
+  }
+  var needFancybox = document.querySelectorAll(selector).length !== 0;
+  if (!needFancybox) {
+    const els = document.getElementsByClassName('ds-memos');
+    if (els != undefined && els.length > 0) {
+      needFancybox = true;
+    }
+  }
+  if (needFancybox) {
+    utils.css(ctx.fancybox.css);
+    utils.js(ctx.fancybox.js, { defer: true }).then(function () {
+      Fancybox.bind(selector, {
+        hideScrollbar: false,
+        Thumbs: {
+          autoStart: false,
+        },
+        caption: (fancybox, slide) => {
+          return slide.triggerEl.alt || slide.triggerEl.dataset.caption || null
+        }
+      });
+    })
+  }
+</script>
+<script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    const swiper_api = document.getElementById('swiper-api');
+    if (swiper_api != undefined) {
+      utils.css(`https://unpkg.com/swiper@10.3/swiper-bundle.min.css`);
+      utils.js(`https://unpkg.com/swiper@10.3/swiper-bundle.min.js`, { defer: true }).then(function () {
+        const effect = swiper_api.getAttribute('effect') || '';
+        var swiper = new Swiper('.swiper#swiper-api', {
+          slidesPerView: 'auto',
+          spaceBetween: 8,
+          centeredSlides: true,
+          effect: effect,
+          rewind: true,
+          pagination: {
+            el: '.swiper-pagination',
+            clickable: true,
+          },
+          navigation: {
+            nextEl: '.swiper-button-next',
+            prevEl: '.swiper-button-prev',
+          },
+        });
+      })
+    }
+  });
+</script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    window.codeElements = document.querySelectorAll('.code');
+    if (window.codeElements.length > 0) {
+      ctx.copycode = {
+        default_text: `Copy`,
+        success_text: `Copied`,
+        toast: `复制成功`,
+      };
+      utils.js('/js/plugins/copycode.js');
+    }
+  });
+</script>
+
+
+<!-- inject -->
+
+</div></body></html>

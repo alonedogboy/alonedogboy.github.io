@@ -1,0 +1,928 @@
+
+<!DOCTYPE html><html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="hexo-theme" content="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.31.0" theme-name="Stellar" theme-version="1.31.0">
+  
+  <meta name="generator" content="Hexo 7.3.0">
+  <meta http-equiv='x-dns-prefetch-control' content='on' />
+  
+  <meta name="renderer" content="webkit">
+  <meta name="force-rendering" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+  <meta name="HandheldFriendly" content="True" >
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000">
+  <meta name="theme-color" content="#f9fafb">
+  
+  <title>使用cdnfly自建CDN并配置CC防护 - 文一刀</title>
+
+  
+    <meta name="description" content="更新： 2023.3.30 修正了第三节”自建云端的错误”，伪装授权站需要一直存在2023.4.02 修复了国内机器无法连接github的问题，即增加了国内机器可访问的安装脚本2023.4.14 新增了cdnfly设置回源host实现反代的介绍2023.4.24 修复了伪装站点监控失效的情况，更新了cdnfly的节点监控功能说明2023.5.21 cdnfly5.1.13存在重大漏洞，普通用户生成">
+<meta property="og:type" content="article">
+<meta property="og:title" content="使用cdnfly自建CDN并配置CC防护">
+<meta property="og:url" content="http://example.com/2023/08/07/%E4%BD%BF%E7%94%A8cdnfly%E8%87%AA%E5%BB%BACDN%E5%B9%B6%E9%85%8D%E7%BD%AECC%E9%98%B2%E6%8A%A4/index.html">
+<meta property="og:site_name" content="文一刀">
+<meta property="og:description" content="更新： 2023.3.30 修正了第三节”自建云端的错误”，伪装授权站需要一直存在2023.4.02 修复了国内机器无法连接github的问题，即增加了国内机器可访问的安装脚本2023.4.14 新增了cdnfly设置回源host实现反代的介绍2023.4.24 修复了伪装站点监控失效的情况，更新了cdnfly的节点监控功能说明2023.5.21 cdnfly5.1.13存在重大漏洞，普通用户生成">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://img.uuhu.de/file/1750642545526_20170227173736_yWa2R.webp">
+<meta property="article:published_time" content="2023-08-07T04:45:00.000Z">
+<meta property="article:modified_time" content="2025-06-24T07:05:41.165Z">
+<meta property="article:author" content="First">
+<meta property="article:tag" content="文一刀">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://img.uuhu.de/file/1750642545526_20170227173736_yWa2R.webp">
+  
+  
+  
+  <meta name="keywords" content="文一刀">
+
+  <!-- feed -->
+  
+
+  <link rel="stylesheet" href="/css/main.css?v=1.31.0">
+
+
+  
+    <link rel="shortcut icon" href="https://img.uuhu.de/file/1750651854207_1.ico">
+  
+
+  
+
+  <link href="https://fonts.googleapis.com/css2?family=Lobster&family=Ma+Shan+Zheng&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="l_body content" id="start" layout="post" type="tech" ><aside class="l_left"><div class="sidebg"></div><div class="leftbar-container">
+
+
+<header class="header"><div class="logo-wrap"><a class="avatar" href="/about/"><div class="bg" style="opacity:0;background-image:url(https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/rainbow64@3x.webp);"></div><img no-lazy class="avatar" src="https://img.uuhu.de/file/1750642545526_20170227173736_yWa2R.webp" onerror="javascript:this.classList.add('error');this.src='https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/image/2659360.svg';"></a><a class="title" href="/"><div class="main" ff="title">文一刀</div><div class="sub normal cap">网络流浪者</div><div class="sub hover cap" style="opacity:0"> Internet vagabond</div></a></div></header>
+
+<div class="nav-area">
+<div class="search-wrapper" id="search-wrapper"><form class="search-form"><a class="search-button" onclick="document.getElementById(&quot;search-input&quot;).focus();"><svg t="1705074644177" viewBox="0 0 1025 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1560" width="200" height="200"><path d="M1008.839137 935.96571L792.364903 719.491476a56.783488 56.783488 0 0 0-80.152866 0 358.53545 358.53545 0 1 1 100.857314-335.166073 362.840335 362.840335 0 0 1-3.689902 170.145468 51.248635 51.248635 0 1 0 99.217358 26.444296 462.057693 462.057693 0 1 0-158.255785 242.303546l185.930047 185.725053a51.248635 51.248635 0 0 0 72.568068 0 51.248635 51.248635 0 0 0 0-72.978056z" p-id="1561"></path><path d="M616.479587 615.969233a50.428657 50.428657 0 0 0-61.498362-5.534852 174.655348 174.655348 0 0 1-177.525271 3.484907 49.403684 49.403684 0 0 0-58.833433 6.76482l-3.074918 2.869923a49.403684 49.403684 0 0 0 8.609771 78.10292 277.767601 277.767601 0 0 0 286.992355-5.739847 49.403684 49.403684 0 0 0 8.404776-76.667958z" p-id="1562"></path></svg></a><input type="text" class="search-input" id="search-input" placeholder="站内搜索"></form><div id="search-result"></div><div class="search-no-result">没有找到内容！</div></div>
+
+
+<nav class="menu dis-select"><a class="nav-item active" title="博客" href="/" style="color:#1BCDFC"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M5.879 2.879C5 3.757 5 5.172 5 8v8c0 2.828 0 4.243.879 5.121C6.757 22 8.172 22 11 22h2c2.828 0 4.243 0 5.121-.879C19 20.243 19 18.828 19 16V8c0-2.828 0-4.243-.879-5.121C17.243 2 15.828 2 13 2h-2c-2.828 0-4.243 0-5.121.879M8.25 17a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 0 1.5H9a.75.75 0 0 1-.75-.75M9 12.25a.75.75 0 0 0 0 1.5h6a.75.75 0 0 0 0-1.5zM8.25 9A.75.75 0 0 1 9 8.25h6a.75.75 0 0 1 0 1.5H9A.75.75 0 0 1 8.25 9" clip-rule="evenodd"/><path fill="currentColor" d="M5.235 4.058C5 4.941 5 6.177 5 8v8c0 1.823 0 3.058.235 3.942L5 19.924c-.975-.096-1.631-.313-2.121-.803C2 18.243 2 16.828 2 14v-4c0-2.829 0-4.243.879-5.121c.49-.49 1.146-.707 2.121-.803zm13.53 15.884C19 19.058 19 17.822 19 16V8c0-1.823 0-3.059-.235-3.942l.235.018c.975.096 1.631.313 2.121.803C22 5.757 22 7.17 22 9.999v4c0 2.83 0 4.243-.879 5.122c-.49.49-1.146.707-2.121.803z" opacity=".5"/></svg></a><a class="nav-item" title="关于" href="/about/" style="color:#3DC550"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M14.25 4.48v3.057c0 .111 0 .27.02.406a.936.936 0 0 0 .445.683a.96.96 0 0 0 .783.072c.13-.04.272-.108.378-.159L17 8.005l1.124.534c.106.05.248.119.378.16a.958.958 0 0 0 .783-.073a.936.936 0 0 0 .444-.683c.021-.136.021-.295.021-.406V3.031c.113-.005.224-.01.332-.013C21.154 2.98 22 3.86 22 4.933v11.21c0 1.112-.906 2.01-2.015 2.08c-.97.06-2.108.179-2.985.41c-1.082.286-1.99 1.068-3.373 1.436c-.626.167-1.324.257-1.627.323V5.174c.32-.079 1.382-.203 1.674-.371c.184-.107.377-.216.576-.323m5.478 8.338a.75.75 0 0 1-.546.91l-4 1a.75.75 0 0 1-.364-1.456l4-1a.75.75 0 0 1 .91.546" clip-rule="evenodd"/><path fill="currentColor" d="M18.25 3.151c-.62.073-1.23.18-1.75.336a8.2 8.2 0 0 0-.75.27v3.182l.75-.356l.008-.005a1.13 1.13 0 0 1 .492-.13c.047 0 .094.004.138.01c.175.029.315.1.354.12l.009.005l.749.356V3.647z"/><path fill="currentColor" d="M12 5.214c-.334-.064-1.057-.161-1.718-.339C8.938 4.515 8.05 3.765 7 3.487c-.887-.234-2.041-.352-3.018-.412C2.886 3.007 2 3.9 2 4.998v11.146c0 1.11.906 2.01 2.015 2.079c.97.06 2.108.179 2.985.41c.486.129 1.216.431 1.873.726c1.005.451 2.052.797 3.127 1.034z" opacity=".5"/><path fill="currentColor" d="M4.273 12.818a.75.75 0 0 1 .91-.545l4 1a.75.75 0 1 1-.365 1.455l-4-1a.75.75 0 0 1-.545-.91m.909-4.545a.75.75 0 1 0-.364 1.455l4 1a.75.75 0 0 0 .364-1.455z"/></svg></a><a class="nav-item" title="社交" href="/friends/" style="color:#F44336"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="m13.629 20.472l-.542.916c-.483.816-1.69.816-2.174 0l-.542-.916c-.42-.71-.63-1.066-.968-1.262c-.338-.197-.763-.204-1.613-.219c-1.256-.021-2.043-.098-2.703-.372a5 5 0 0 1-2.706-2.706C2 14.995 2 13.83 2 11.5v-1c0-3.273 0-4.91.737-6.112a5 5 0 0 1 1.65-1.651C5.59 2 7.228 2 10.5 2h3c3.273 0 4.91 0 6.113.737a5 5 0 0 1 1.65 1.65C22 5.59 22 7.228 22 10.5v1c0 2.33 0 3.495-.38 4.413a5 5 0 0 1-2.707 2.706c-.66.274-1.447.35-2.703.372c-.85.015-1.275.022-1.613.219c-.338.196-.548.551-.968 1.262" opacity=".5"/><path fill="currentColor" d="M10.99 14.308c-1.327-.978-3.49-2.84-3.49-4.593c0-2.677 2.475-3.677 4.5-1.609c2.025-2.068 4.5-1.068 4.5 1.609c0 1.752-2.163 3.615-3.49 4.593c-.454.335-.681.502-1.01.502c-.329 0-.556-.167-1.01-.502"/></svg></a></nav>
+</div>
+<div class="widgets">
+
+
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2023/01/03/%E8%87%AA%E5%BB%BA%E7%A7%81%E6%9C%89%20API%20%E6%8C%82%E8%BD%BDOneDrive/"><span class="title">自建私有 API 挂载OneDrive</span></a><a class="item title" href="/2023/07/15/%E8%AE%A2%E9%98%85%E8%BD%AC%E6%8D%A2%E6%90%AD%E5%BB%BA%E4%BF%AE%E6%94%B9%E7%89%88/"><span class="title">订阅转换搭建修改版</span></a><a class="item title" href="/2023/07/14/%E8%AE%A2%E9%98%85%E8%BD%AC%E6%8D%A2%E6%90%AD%E5%BB%BA%E5%8E%9F%E7%89%88%EF%BC%88%E5%89%8D%E5%90%8E%E7%AB%AF%EF%BC%89/"><span class="title">订阅转换搭建原版（前后端）</span></a><a class="item title" href="/2023/01/16/%E9%80%9A%E8%BF%87Origin%20Rules%E4%BD%BFCloudFlare%20CDN%E5%9B%9E%E6%BA%90%E4%BB%A5%E4%BD%BF%E7%94%A8%E4%BB%BB%E6%84%8F%E7%9A%84%E7%AB%AF%E5%8F%A3/"><span class="title">通过Origin Rules使CloudFlare CDN回源以使用任意的端口</span></a><a class="item title" href="/2024/05/01/%E9%83%A8%E7%BD%B2%E6%AF%8F%E6%97%A5%E5%A4%87%E4%BB%BDVPS%E9%87%8D%E8%A6%81%E6%95%B0%E6%8D%AE%E8%87%B3%E9%98%BF%E9%87%8C%E4%BA%91%E7%9B%98/"><span class="title">部署每日备份VPS重要数据至阿里云盘</span></a></div></widget>
+</div>
+
+</div></aside><div class="l_main" id="main">
+
+
+
+
+
+<div class="article banner top">
+  <div class="content">
+    <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
+<span class="sep"></span><a class="cap breadcrumb" href="/">文章</a><span class="sep"></span><a class="cap breadcrumb-link" href="/categories/%E9%BB%98%E8%AE%A4%E5%88%86%E7%B1%BB/">默认分类</a></div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2023-08-07T04:45:00.000Z">2023-08-07</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2025-06-24T07:05:41.165Z">2025-06-24</time></span></div></div></div>
+    
+    <div class="bottom only-title">
+      
+      <div class="text-area">
+        <h1 class="text title"><span>使用cdnfly自建CDN并配置CC防护</span></h1>
+        
+      </div>
+    </div>
+    
+  </div>
+  </div><article class="md-text content"><p><strong>更新：</strong></p>
+<p>2023.3.30 修正了第三节”自建云端的错误”，伪装授权站需要一直存在<br>2023.4.02 修复了国内机器无法连接github的问题，即增加了国内机器可访问的安装脚本<br>2023.4.14 新增了cdnfly设置回源host实现反代的介绍<br>2023.4.24 修复了伪装站点监控失效的情况，更新了cdnfly的节点监控功能说明<br>2023.5.21 cdnfly5.1.13存在重大漏洞，普通用户生成的API通过某些方法可以拿到管理员权限<br>2023.7.23 删除了国内机器安装脚本 请自行挂代理<br>2023.7.24 新增 [备份和恢复]记录<br>2023.7.25 更新主控&amp;节点安装命令</p>
+<h2 id="一、前言"><a href="#一、前言" class="headerlink" title="一、前言"></a>一、前言</h2><p>本文记录一下使用 <a target="_blank" rel="noopener" href="http://www.cdnfly.cn/">[Cdnfly - 自建cdn|防CC攻击|cdn软件|cdn系统]</a> 搭建CDN系统，保姆级教程 适合小白食用<br>个人感觉<code>自建CDN</code>和<code>反代网站</code>效果都差不多，都可以实现加速 缓存 防攻击等功能，但我暂时还不是很懂nginx相关配置，相较而言 自建CDN更容易批量维护和管理各节点<br>官方安装文档：<a target="_blank" rel="noopener" href="http://doc.cdnfly.cn/1791543">安装说明 · Cdnfly使用文档</a></p>
+<h2 id="二、准备"><a href="#二、准备" class="headerlink" title="二、准备"></a>二、准备</h2><blockquote>
+<p>主控和被控均不能在 已安装nginx的情况下 执行安装命令，必须确保80 443端口未被占用!!!</p>
+<p>系统必须为centos7或ubuntu16.04 !!! debian11 ubuntu20 centos8 centos6等系统都不支持</p>
+<p>主控需开放80 88 443 9200端口</p>
+<p>节点需要开放 80 443 5000端口</p>
+</blockquote>
+<ul>
+<li>一台最小4GB内存的服务器(vps)做主控(cdn面板控制台)</li>
+<li>若干服务器做CDN节点</li>
+<li>系统：cdnfly主控和被控节点暂时仅支持Centos-7和Ubuntu 16.04系统</li>
+</ul>
+<blockquote>
+<p>本文以一台centos7系统的hetzner 4GB内存vps <code>167.235.134.18</code> 做主控</p>
+<p>一台任何系统的vps <code>63.251.217.137</code> 搭建伪装授权站点，即cdnfly自建云端</p>
+<p>一台centos7系统的DO纽约 512MB内存vps <code>192.241.156.51</code> 做节点2 接管中国大陆移动以及海外等其他流量</p>
+<p>一台centos7系统的DO新加坡 512MB内存vps <code>157.245.154.23</code> 做节点2 接管中国大陆的电信和联通流量</p>
+<p>为什么用DO 主要是我就知道这一家有0.5GB小内存，虽然这款比一些4GB内存的都贵 但为了测试512MB内存可用 还是选择了DO</p>
+<p>为什么CDN节点机器用0.5GB内存小鸡 大部分廉价的国内优化机器只有0.5GB内存</p>
+</blockquote>
+<h2 id="三、cdnfly自建云端"><a href="#三、cdnfly自建云端" class="headerlink" title="三、cdnfly自建云端"></a>三、cdnfly自建云端</h2><blockquote>
+<p>有cdnfly官方授权的可跳过这一步，需要购买正版授权请前往 <a target="_blank" rel="noopener" href="http://www.cdnfly.cn/package.html">官网购买</a></p>
+<p>因为我就是临时个人测试使用，官方那个有些贵，就采用 ccclt 大佬分享的的 <a target="_blank" rel="noopener" href="https://hostloc.com/thread-1044609-1-1.html">绕过授权方法</a></p>
+<p>盗版可耻 开发不易 有条件请用正版<br><strong>cdnfly自建云端搭建方法：</strong><br>用 <a target="_blank" rel="noopener" href="https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgADLmW49O5pf6OtmAhE5MV747k8ItvmAAJ7EAACecnIVUBQ9IKT8GpENAQ">这个源码</a> 搭建一个站点，绑定域名auth.cdnfly.cn、monitor.cdnfly.cn ,并根据文件中的nginx伪静态配置设置伪静态。<br>建议自己搭建，不过也可以用我的，但是我的站点哪一天没了，你的机器会提示授权过期 到时候还是需要你自己搭建<br>我用宝塔搭建大概为这样：<br><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://img.uuhu.de/file/hexo/1750670904457_1750670884890.png" alt="Alt Text"><br><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://img.uuhu.de/file/hexo/1750670916030_1750670883134.png" alt="Alt Text"><br><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://img.uuhu.de/file/hexo/1750670920643_1750670884786.png" alt="Alt Text"><br>我的只能使用http监控，tcp ping监控都无法正常工作，可能和宝塔有关<br><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://img.uuhu.de/file/hexo/1750670927364_1750670881468.png" alt="Alt Text"></p>
+</blockquote>
+<h2 id="四、主控服务器设置"><a href="#四、主控服务器设置" class="headerlink" title="四、主控服务器设置"></a>四、主控服务器设置</h2><p>主控需要开放 80 88 443 9200端口，并且主控和节点机不能安装在同一机器上，会导致80端口冲突<br>主控若未开启9200 88端口 会导致程序大量占用CPU直至死机，如有任何问题 建议重置elasticsearch</p>
+<h4 id="1、首先更新centos7源"><a href="#1、首先更新centos7源" class="headerlink" title="1、首先更新centos7源"></a>1、首先更新centos7源</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">yum update -y &amp;&amp; yum upgrade -y</span><br></pre></td></tr></table></figure>
+
+<h4 id="2、修改主控vps的hosts文件"><a href="#2、修改主控vps的hosts文件" class="headerlink" title="2、修改主控vps的hosts文件"></a>2、修改主控vps的hosts文件</h4><p>修改主控vps的hosts文件，将 auth.cdnfly.cn、monitor.cdnfly.cn 这2个域名指向刚才的自建云端服务器IP <code>63.251.217.137</code><br>修改hosts意义是 主控vps请求 <code>auth.cdnfly.cn</code> <code>monitor.cdnfly.cn</code> 这两个网站的内容会直接去 <code>63.251.217.137</code> 这个服务器请求，这样就绕过了官方服务器的验证</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">vi /etc/hosts</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">#添加以下内容，记得替换为你自己搭建的IP 你就用这个IP也行</span><br><span class="line">63.251.217.137 auth.cdnfly.cn monitor.cdnfly.cn</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">#2023.6.17更新云端IP 此IP可以tcp监控</span><br><span class="line">#51.81.222.246 auth.cdnfly.cn monitor.cdnfly.cn</span><br></pre></td></tr></table></figure>
+
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://img.uuhu.de/file/hexo/1750670934683_1750670883132.png" alt="Alt Text"></p>
+<h4 id="3、检查hosts是否生效"><a href="#3、检查hosts是否生效" class="headerlink" title="3、检查hosts是否生效"></a>3、检查hosts是否生效</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">ping auth.cdnfly.cn</span><br><span class="line">ping monitor.cdnfly.cn</span><br><span class="line">#如果都返回 63.251.217.137 说明hosts已经生效，主控vps请求 `auth.cdnfly.cn` `monitor.cdnfly.cn` 这两个网站的内容会直接去 `63.251.217.137` 这个服务器请求，这样就绕过了官方服务器的验证</span><br></pre></td></tr></table></figure>
+
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://img.uuhu.de/file/hexo/1750670942129_1750670884891.png" alt="Alt Text"></p>
+<h4 id="4、安装cdnfly控制面板"><a href="#4、安装cdnfly控制面板" class="headerlink" title="4、安装cdnfly控制面板"></a>4、安装cdnfly控制面板</h4><p>这里参考 <a target="_blank" rel="noopener" href="https://github.com/Steady-WJ/cdnfly-kaixin">Steady-WJ</a> 整理的</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">#直接在主控vps执行这条命令即可，控制面板占用3GB内存，内存不足会安装失败</span><br><span class="line"></span><br><span class="line">curl -fsSL https://github.com/Steady-WJ/cdnfly-kaixin/raw/main/master.sh -o master.sh &amp;&amp; chmod +x master.sh &amp;&amp; ./master.sh --es-dir /home/es</span><br></pre></td></tr></table></figure>
+
+<p>出现下图页面即安装成功，通过 IP <code>http://167.235.134.18</code> 直接访问即可</p>
+<blockquote>
+<p>如果出现报错等中止安装，大多数情况是你的系统不是centos7或ubuntu16.04，cdnfly开心版只支持centos7或ubuntu16.04系统，其它系统肯定无法正常运行<br>管理员账号和密码： wenjian&#x2F;wenjian<br>普通用户账号和密码： ceshi&#x2F;ceshi<br>5.1.12版本的主控有严重的 [安全漏洞]</p>
+<p>普通用户生成的API通过某些方法可以拿到管理员权限，请自行根据 [此方法] 修复<br><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://img.uuhu.de/file/hexo/1750670953034_1750670884829.png" alt="Alt Text"><br><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://img.uuhu.de/file/hexo/1750670955627_1750670883092.png" alt="Alt Text"></p>
+</blockquote>
+<h2 id="五、CDN节点服务器配置"><a href="#五、CDN节点服务器配置" class="headerlink" title="五、CDN节点服务器配置"></a>五、CDN节点服务器配置</h2><p>我用了两台做CDN节点，节点需要开放80 443 5000端口<br>一台centos7系统的DO纽约 512MB内存vps <code>192.241.156.51</code> 做节点2 接管中国大陆移动以及海外等其他流量<br>一台centos7系统的DO新加坡 512MB内存vps <code>157.245.154.23</code> 做节点2 接管中国大陆的电信和联通流量<br>以节点1 <code>192.241.156.51</code> 为例，节点2 <code>157.245.154.23</code> 同理</p>
+<h4 id="1、更新centos7的源"><a href="#1、更新centos7的源" class="headerlink" title="1、更新centos7的源"></a>1、更新centos7的源</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">yum update -y</span><br></pre></td></tr></table></figure>
+
+<h4 id="2、添加SWAP虚拟内存"><a href="#2、添加SWAP虚拟内存" class="headerlink" title="2、添加SWAP虚拟内存"></a>2、添加SWAP虚拟内存</h4><blockquote>
+<p>1GB内存及以下的小鸡必须添加SWAP否则会报错，2GB以上内存的vps可自行决定是否添加SWAP<br>centos7添加SWAP我参考的 <a target="_blank" rel="noopener" href="https://cloud.tencent.com/developer/article/1722369">这篇文章</a></p>
+</blockquote>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">#先用 free -m 查看一下swap的大小</span><br><span class="line"></span><br><span class="line">#1、使用dd命令创建/home/swap这么一个分区文件。文件的大小是1024000个block，一般情况下1个block为1K，所以这里空间是1000MB</span><br><span class="line"></span><br><span class="line">dd if=/dev/zero of=/home/swap bs=1024 count=1024000</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">#2、接着再把这个分区变成swap分区</span><br><span class="line"></span><br><span class="line">/sbin/mkswap /home/swap</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">#3、再接着使用这个swap分区。使其成为有效状态</span><br><span class="line"></span><br><span class="line">/sbin/swapon /home/swap</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">#现在再用 free -m 命令查看一下内存和swap分区大小，就发现增加了512M的空间了</span><br><span class="line"></span><br><span class="line">#4、修改/etc/fstab文件，在文件末尾增加如下一行，实现开机自动挂载</span><br><span class="line">#vi /etc/fstab</span><br><span class="line"></span><br><span class="line">/home/swap swap swap defaults 0 0</span><br></pre></td></tr></table></figure>
+
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://img.uuhu.de/file/hexo/1750670958030_1750670886271.png" alt="Alt Text"></p>
+<h4 id="3、安装被控服务"><a href="#3、安装被控服务" class="headerlink" title="3、安装被控服务"></a>3、安装被控服务</h4><p>进入cdnfly管理员控制台&gt;&gt;系统管理&gt;&gt;系统升级，复制节点安装命令并在节点1和节点2等CDN节点服务器执行<br><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://img.uuhu.de/file/hexo/1750670967209_1750670886101.png" alt="Alt Text"></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">curl -fsSL https://github.com/Steady-WJ/cdnfly-kaixin/raw/main/agent.sh -o agent.sh &amp;&amp; chmod +x agent.sh &amp;&amp; ./agent.sh --master-ver v5.1.13 --master-ip ip --es-ip ip --es-pwd passwd</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">###替换--master-ip --es-ip --es-pwd 为你自己的，在cdnfly面板查看</span><br><span class="line">###例如我执行的脚本为</span><br><span class="line">curl -fsSL https://github.com/Steady-WJ/cdnfly-kaixin/raw/main/agent.sh -o agent.sh &amp;&amp; chmod +x agent.sh &amp;&amp; ./agent.sh --master-ver v5.1.13 --master-ip 167.235.134.18 --es-ip 167.235.134.18 --es-pwd OPpESBo9mF</span><br></pre></td></tr></table></figure>
+
+<p>下图即为安装成功，cdnfly被控服务会自己安装nginx等<br><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://img.uuhu.de/file/hexo/1750670973331_1750670886314.png" alt="Alt Text"></p>
+<h4 id="4、安装BBR"><a href="#4、安装BBR" class="headerlink" title="4、安装BBR"></a>4、安装BBR</h4><p>从下图就可以看出丢包对BBR的影响有多大<br>centos安装BBR我用的以下这条命令</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">wget &quot;https://github.com/cx9208/bbrplus/raw/master/ok_bbrplus_centos.sh&quot; &amp;&amp; chmod +x ok_bbrplus_centos.sh &amp;&amp; ./ok_bbrplus_centos.sh</span><br></pre></td></tr></table></figure>
+
+<p>参考：<a target="_blank" rel="noopener" href="https://aws.amazon.com/cn/blogs/china/talking-about-network-optimization-from-the-flow-control-algorithm/">从流量控制算法谈网络优化 – 从 CUBIC 到 BBRv2 算法</a><br><a target="_blank" rel="noopener" href="https://toonk.io/tcp-bbr-exploring-tcp-congestion-control/index.html">TCP BBR - Exploring TCP congestion control (toonk.io)</a><br><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://img.uuhu.de/file/hexo/1750670975486_1750670884886.png" alt="Alt Text"></p>
+<h4 id="5、卸载节点"><a href="#5、卸载节点" class="headerlink" title="5、卸载节点"></a>5、卸载节点</h4><p>如果节点想换到另一台主控或者不想占用80 443 ，可以执行这条命令卸载节点</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cd /tmp/ &amp;&amp; curl -m 5 http://dl2.cdnfly.cn/cdnfly/agent_uninstall.sh -o agent_uninstall.sh || curl -m 5 http://us.centos.bz/cdnfly/agent_uninstall.sh &amp;&amp; chmod +x agent_uninstall.sh &amp;&amp; ./agent_uninstall.sh </span><br></pre></td></tr></table></figure>
+
+<h2 id="六、cdnfly控制台必要配置"><a href="#六、cdnfly控制台必要配置" class="headerlink" title="六、cdnfly控制台必要配置"></a>六、cdnfly控制台必要配置</h2><blockquote>
+<p>官方安装文档：<a target="_blank" rel="noopener" href="http://doc.cdnfly.cn/1791543">安装说明 · Cdnfly使用文档</a></p>
+</blockquote>
+<h4 id="1、添加CDN节点"><a href="#1、添加CDN节点" class="headerlink" title="1、添加CDN节点"></a>1、添加CDN节点</h4><p>即主控与被控服务建立连接，添加方法如下图<br>会提示先修改密码，修改密码在：系统管理&gt;&gt;用户管理<br><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://img.uuhu.de/file/hexo/1750670980553_1750670884777.png" alt="Alt Text"><br><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://img.uuhu.de/file/hexo/1750670989671_1750670884776.png" alt="Alt Text"><br>1GB内存小鸡通常会出现 <code>同步cc_filter nginx openresty</code> 以下报错，这是因为内存不够 解决办法是添加虚拟内存即可。<br><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://img.uuhu.de/file/hexo/1750670994160_1750670884887.png" alt="Alt Text"></p>
+<h4 id="2、DNS设置"><a href="#2、DNS设置" class="headerlink" title="2、DNS设置"></a>2、DNS设置</h4><p>DNS设置可配置通过API来与第三方DNS提供商无缝对接，来生成网站的CNAME<br>目前支持aliyun，国内版dnspod，dns.com、dns.la 和cloudflare.com</p>
+<blockquote>
+<p>获取密钥具体参考官方 <a target="_blank" rel="noopener" href="http://doc.cdnfly.cn/1790340">DNS设置</a></p>
+</blockquote>
+<h4 id="3、线路分组-设置分线路解析"><a href="#3、线路分组-设置分线路解析" class="headerlink" title="3、线路分组 设置分线路解析"></a>3、线路分组 设置分线路解析</h4><blockquote>
+<p>只有 DNS服务商 支持分线路解析才可以设置分线路解析</p>
+<p>例如cloudflare这类国外DNS服务就不支持分线路解析<br><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://img.uuhu.de/file/hexo/1750671001271_1750670884889.png" alt="Alt Text"><br><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://img.uuhu.de/file/hexo/1750670998407_1750670884785.png" alt="Alt Text"><br>还可以为IP设置权重，权重越大用户访问该IP相对越多</p>
+</blockquote>
+<h4 id="4、添加套餐"><a href="#4、添加套餐" class="headerlink" title="4、添加套餐"></a>4、添加套餐</h4><ul>
+<li>名称 - 套餐名称，用户端也会显示这个</li>
+<li>描述 - 套餐的说明，也会显示到用户端的套餐购买列表</li>
+<li>分配给用户 - 输入用户的id，表示指定该套餐为该用户的专属套餐，只有这个用户能购买此套餐</li>
+<li>线路分组 - 上一步添加的线路组，或其它分组，决定网站绑定此套餐后网站配置分发到的节点，以及cname解析的IP</li>
+<li>套餐分组 - 为套餐分组，分组也会显示到用户端的套餐购买页面，方便归类购买</li>
+<li>CNAME域名 - 生成网站cname使用的域名，默认为之前dns设置中的主域名，可以输入其它的域名，但此域名必须跟主域名在同一个dns账号下。</li>
+<li>月流量 - G为单位，限制该套餐一个自然月内使用流量的上限</li>
+<li>域名数 - 该套餐允许的域名数量，域名数量包括裸域名及各级域名，<a target="_blank" rel="noopener" href="http://如www.cdnfly.cn/">如www.cdnfly.cn</a> cdnfly.cn算两域名</li>
+<li>HTTP非80,443端口数 - http可以输入非80,443的端口，此项可以限制非标端口的数量，不允许的话设置为0</li>
+<li>四层转发端口数 - 四层转发允许的端口数</li>
+<li>自定义CC规则 - 如果此项为允许，用户则可以创建自己的cc规则，并绑定到网站使用。如果为禁止，则用户只允许选择系统内置的规则</li>
+<li>排序 - 默认100，小值排在前面</li>
+<li>带宽为负值表示无限制</li>
+<li>连接数为负值表示不限制连接数<br><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://img.uuhu.de/file/hexo/1750671002732_1750670886141.png" alt="Alt Text"></li>
+</ul>
+<h4 id="5、添加网站"><a href="#5、添加网站" class="headerlink" title="5、添加网站"></a>5、添加网站</h4><p>用管理员权限在 系统管理&gt;&gt;用户管理 创建一个用户 test<br>以 test 用户登录 然后购买免费的高级套餐，在网站管理&gt;&gt;分组管理&gt;&gt;新增分组后就可以添加网站了</p>
+<h4 id="6、节点监控介绍"><a href="#6、节点监控介绍" class="headerlink" title="6、节点监控介绍"></a>6、节点监控介绍</h4><blockquote>
+<p>此节内容于2023.4.24补充，我的云端伪装站点只可以使用http监控，tcp ping监控均无法生效，目前不知到什么原因</p>
+<p>#2023.6.17更新 此IP可以tcp监控，看来是宝塔等问题<br>#51.81.222.246 auth.cdnfly.cn monitor.cdnfly.cn<br><strong>cdnfly节点自动切换的规则：</strong><br>cdnfly的节点监控支持主节点宕机自动暂停 并删除该条DNS解析记录<br>如果设置了备用节点会用一个备用节点替换已失效的主节点 并同步DNS解析记录<br>当主节点再次恢复正常，cdnfly自动启用主节点并且取消使用备用节点，同时DNS会增加主节点DNS记录删去备用节点的解析记录<br>以上操作均为系统自动执行无需人工干预，可以选择配置SMTP发信服务，可以收到 节点失效&#x2F;节点恢复&#x2F;切换操作 等通知<br><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://img.uuhu.de/file/hexo/1750671010735_1750670886143.png" alt="Alt Text"><br><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://img.uuhu.de/file/hexo/1750671017368_1750670884888.png" alt="Alt Text"><br><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://img.uuhu.de/file/hexo/1750671022484_1750670885738.png" alt="Alt Text"><br><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://img.uuhu.de/file/hexo/1750671029515_1750670883148.png" alt="Alt Text"></p>
+</blockquote>
+<h4 id="7、单节点设置"><a href="#7、单节点设置" class="headerlink" title="7、单节点设置"></a>7、单节点设置</h4><p>可以限制节点机器的文件缓存大小(不要超过vps硬盘本身大小)<br>可以设置节点出站速度（100Mbps&#x3D;12.5MB&#x2F;s）</p>
+<blockquote>
+<p>这里的代理设置应该不是指CDN节点到用户这段可以通过代理加速<br>代理似乎也只支持http代理<br>因为我给cdnfly节点添加代理后，我在云端监控(云端伪装站点)的服务器监听到了它与代理IP进行通信<br>我猜测是：系统执行定时任务检查时，如果给CDN节点配置了代理，云端监控通过代理去访问CDN节点<br><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://img.uuhu.de/file/hexo/1750671031112_1750670881587.png" alt="Alt Text"><br><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://img.uuhu.de/file/hexo/1750671043681_1750670881554.png" alt="Alt Text"><br>当http代理无效或非http代理时，还会报错，此时同步等功能会失效<br><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://img.uuhu.de/file/hexo/1750671043455_1750670881500.png" alt="Alt Text"><br><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://img.uuhu.de/file/hexo/1750671049532_1750670881469.png" alt="Alt Text"></p>
+</blockquote>
+<h4 id="8、禁用API-多用户必设置-重要重要重要！！！"><a href="#8、禁用API-多用户必设置-重要重要重要！！！" class="headerlink" title="8、禁用API(多用户必设置)(重要重要重要！！！)"></a><strong>8、禁用API(多用户必设置)(重要重要重要！！！)</strong></h4><p><strong>2023.5.21 cdnfly5.1.13存在重大漏洞，普通用户生成的API通过某些方法可以拿到管理员权限，解决方法就是禁用API，首先在 <code>cdnfly控制台</code> &gt; <code>系统管理</code> &gt; <code>系统设置</code> &gt; <code>用户相关</code> &gt; <code>限制普通用户只能从此域名登录</code> 和<code>限制管理员只能从此域名登录</code></strong><br><em><em>再依次在这两个登录域名设置 禁止 &#x2F;v1&#x2F;</em> 的所有访问，5.1.13版本的 <code>/v1</code> 路径是执行api的必要路径，封禁就可以避免被黑了</em> *<br><strong>限制cdnfly从域名登录是避免从源站ip访问到了api</strong><br><strong>限制管理员是二次防火墙，如果黑客获取了权限，但是不知道你的管理员登录地址，他就只能对普通用户更改</strong><br><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://img.uuhu.de/file/hexo/1750671050530_1750670883093.png" alt="Alt Text"><br><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://img.uuhu.de/file/hexo/1750671054812_1750670881484.png" alt="Alt Text"></p>
+<h2 id="七、cdnfly控制台推荐配置"><a href="#七、cdnfly控制台推荐配置" class="headerlink" title="七、cdnfly控制台推荐配置"></a>七、cdnfly控制台推荐配置</h2><h4 id="1、设置CC防护"><a href="#1、设置CC防护" class="headerlink" title="1、设置CC防护"></a>1、设置CC防护</h4><p>这个根据自己需要设置就好了，还可以自定义CC规则<br>比如设置单IP 10s内最大访问 329.tanglu.cf 资源数为100，单个资源最大次数为20</p>
+<blockquote>
+<p>这个防一般的单IP CC攻击很有效，推荐设置<br>需要自己CC测压 可以参考 <a target="_blank" rel="noopener" href="https://blog.tanglu.me/stop-cc">这篇记录</a><br><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://img.uuhu.de/file/hexo/1750671060201_1750670881471.png" alt="Alt Text"><br>一些发卡站避免被机器人检查可以设置访问该域名需要点击验证<br><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://img.uuhu.de/file/hexo/1750671066128_1750670881470.png" alt="Alt Text"></p>
+</blockquote>
+<h4 id="2、设置CDN缓存文件类型"><a href="#2、设置CDN缓存文件类型" class="headerlink" title="2、设置CDN缓存文件类型"></a>2、设置CDN缓存文件类型</h4><p>这个也是根据自己网站的资源类型，以下是我博客的设置<br>缓存设置建议参考官方文档：<a target="_blank" rel="noopener" href="http://doc.cdnfly.cn/1794807">缓存配置 · Cdnfly使用文档</a><br>默认为不缓存任何文件<br><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://img.uuhu.de/file/hexo/1750671068691_1750670881472.png" alt="Alt Text"></p>
+<h4 id="3、设置CDN节点服务器缓存大小和最大带宽"><a href="#3、设置CDN节点服务器缓存大小和最大带宽" class="headerlink" title="3、设置CDN节点服务器缓存大小和最大带宽"></a>3、设置CDN节点服务器缓存大小和最大带宽</h4><p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://img.uuhu.de/file/hexo/1750671075761_1750670883020.png" alt="Alt Text"></p>
+<h4 id="4、申请证书"><a href="#4、申请证书" class="headerlink" title="4、申请证书"></a>4、申请证书</h4><p>cdnfly的证书是自动续签的<br>cdnfly申请证书很简单有两种方法<br>一种是一键申请<br><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://img.uuhu.de/file/hexo/1750671082196_1750670882050.png" alt="Alt Text"><br>一种是在 <code>网站管理</code> &gt; <code>证书管理</code> &gt; <code>我的证书</code> 中申请证书<br>当然也可以上传自己的证书<br><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://img.uuhu.de/file/hexo/1750671089523_1750670882984.png" alt="Alt Text"><br>如果没有申请成功，可以在 <code>我的网站</code> &gt; <code>高级配置</code> 中开启 <code>/.well-known/acme-challenge/请求回源</code><br><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://img.uuhu.de/file/hexo/1750671091616_1750670882069.png" alt="Alt Text"></p>
+<h2 id="八、cdnfly控制台其他配置"><a href="#八、cdnfly控制台其他配置" class="headerlink" title="八、cdnfly控制台其他配置"></a>八、cdnfly控制台其他配置</h2><h4 id="1、短信-邮箱提示"><a href="#1、短信-邮箱提示" class="headerlink" title="1、短信&#x2F;邮箱提示"></a>1、短信&#x2F;邮箱提示</h4><p>这里就是设置SMTP服务，QQ&#x2F;gmail等都支持SMT发信，可以参考篇记录获取你QQ&#x2F;gmail的SMTP专用密码：<a target="_blank" rel="noopener" href="https://blog.tanglu.me/webmail/#%E4%B8%89%E3%80%81%E9%80%9A%E8%BF%87%E6%9C%8D%E5%8A%A1%E5%99%A8%E8%B4%A6%E5%8F%B7%E5%AF%86%E7%A0%81%E7%99%BB%E5%BD%95">获取QQ&#x2F;gmail等邮箱的SMTP账号密码</a><br>也可以用自己的域名邮箱发件，我在这里演示过使用scaleway的邮件推送服务：<a target="_blank" rel="noopener" href="https://blog.tanglu.me/send-and-receive-mails/#%E4%B8%89%E3%80%81%E9%85%8D%E7%BD%AE%E5%8F%91%E4%BB%B6%E6%9C%8D%E5%8A%A1%E5%99%A8">邮件推送</a><br><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://img.uuhu.de/file/hexo/1750671095807_1750670883090.png" alt="Alt Text"><br>主控必须开放相应端口(25&#x2F;465)才可以连接发件服务器从而正常发件，如果确认cdnfly的SMTP配置没问题但是cdnfly显示无法连接，可以检查主控服务器相应端口是否开放</p>
+<h4 id="2、对接支付"><a href="#2、对接支付" class="headerlink" title="2、对接支付"></a>2、对接支付</h4><p>需要支付功能请参考 <a target="_blank" rel="noopener" href="http://doc.cdnfly.cn/1827348">充值设置</a></p>
+<h4 id="3、转发"><a href="#3、转发" class="headerlink" title="3、转发"></a>3、转发</h4><p>转发容易封禁端口，不建议用CDN服务器做转发</p>
+<h4 id="4、面板通过域名访问"><a href="#4、面板通过域名访问" class="headerlink" title="4、面板通过域名访问"></a>4、面板通过域名访问</h4><p>直接套cloudflare，或者套其它CDN，也可以用其他机器反代 但感觉没必要<br><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://img.uuhu.de/file/hexo/1750671099920_1750670882068.png" alt="Alt Text"></p>
+<h4 id="5、节点监控和宕机自动切换"><a href="#5、节点监控和宕机自动切换" class="headerlink" title="5、节点监控和宕机自动切换"></a>5、节点监控和宕机自动切换</h4><p>需要配置SMTP节点超时会提示和开启宕机自动切换自动切换</p>
+<h4 id="6、cdnfly设置反代"><a href="#6、cdnfly设置反代" class="headerlink" title="6、cdnfly设置反代"></a>6、cdnfly设置反代</h4><blockquote>
+<p>这个功能就是指定回源host，实现反代的功能<br>比如想给R2套第三方CDN就需要在第三方CDN配置回源host指向R2的绑定域名<br>举个指定CDN回源host，实现反代的功能的例子：<br>源站 blog.tanglu.me，现在用 blog.tang.lu 反代源站 ，如果直接给blog.tang.lu配置普通CDN CDN设置回源站点是 blog.tanglu.me，CDN解析出blog.tanglu.me的IP 2.2.2.2 然后发送http请求为 ‘’域名blog.tang.lu IP2.2.2.2’,因为源站点没有配置blog.tang.lu这个站点 访问就会报错。但是CDN设置指定回源HOST为blog.tanglu.me,CDN设置回源请求就是 ‘IP是2.2.2.2 回源域名是 blog.tanglu.me’,这样就可以成功访问了<br><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://img.uuhu.de/file/hexo/1750671102127_1750670881473.png" alt="Alt Text"></p>
+</blockquote>
+<h2 id="九、备份和恢复"><a href="#九、备份和恢复" class="headerlink" title="九、备份和恢复"></a>九、备份和恢复</h2><p>cdnfly提供了非常简单的备份和恢复功能</p>
+<h4 id="1、备份"><a href="#1、备份" class="headerlink" title="1、备份"></a>1、备份</h4><p>主控默认会每两小时备份数据库，备份默认保留7天（可以自行修改保留天数），备份文件在 <code>/data/backup/cdn/</code><br>除了备份数据库，还需要备份 <code>/opt/cdnfly/master/conf</code> 文件夹下的 <code>config.py</code> 文件(其实记住AES_KEY和LOG_PWD就行了)<br>恢复时只需要用到这两个文件，为了防止主控失联，建议每天上传备份<br><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://img.uuhu.de/file/hexo/1750671107130_1750670882088.png" alt="Alt Text"><br>每日自动上传备份</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">#我这里只是记录一下我的操作 可能不适合你</span><br><span class="line">crontab -e</span><br><span class="line"></span><br><span class="line">0 1,13 * * * rclone copy /data/backup/cdn/ r2:tanglu/cdnfly/backup/vps1</span><br></pre></td></tr></table></figure>
+
+<h4 id="2、恢复"><a href="#2、恢复" class="headerlink" title="2、恢复"></a>2、恢复</h4><p>此操作参考<a target="_blank" rel="noopener" href="http://doc.cdnfly.cn/FAQ.html#%E6%97%A7%E4%B8%BB%E6%8E%A7%E6%97%A0%E6%B3%95%E6%89%93%E5%BC%80%E7%9A%84%E6%83%85%E5%86%B5">cdnfly官网</a>，亲测有效<br><strong>旧主控：</strong><br>将旧主控 <code>/data/backup/cdn/</code> 下的某个时间的数据库备份包 如 <code>mysql-20230724-010931.sql.gz</code> 下载到本地，重命名为 <code>cdn.sql.gz</code><br>将旧主控的 <code>/opt/cdnfly/master/conf/config.py</code> 文件也下载下来<br>关闭旧主控，这里记得关闭，如果不关闭的话新旧主控同时运行会出现后台任务只创建但不执行，导致新主控无法正常运行<br><strong>新主控：</strong><br>首先正常执行安装主控命令：<br>如果有需要自授权请先搭建云端 修改hosts</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">curl -fsSL https://github.com/Steady-WJ/cdnfly-kaixin/raw/main/master.sh -o master.sh &amp;&amp; chmod +x master.sh &amp;&amp; ./master.sh --es-dir /home/es</span><br></pre></td></tr></table></figure>
+
+<p>然后ssh连接新主控，恢复备份和config. py，初始化es</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">#进入主控root目录</span><br><span class="line">cd /root</span><br><span class="line"></span><br><span class="line">#将上节备份的数据库文件 cdn.sql.gz 上传到root目录</span><br><span class="line"></span><br><span class="line">#在root目录下执行以下两条命令 恢复数据库</span><br><span class="line">curl http://us.centos.bz/cdnfly/restore_master.sh -o restore_master.sh &amp;&amp; chmod +x restore_master.sh</span><br><span class="line"></span><br><span class="line">./restore_master.sh</span><br><span class="line"></span><br><span class="line">#将上节备份的旧主控 /opt/cdnfly/master/conf/config.py 上传新主控相同位置，实现替换掉新主控的config.py文件</span><br><span class="line"></span><br><span class="line">#依次执行以下四条命令初始化elasticsearch</span><br><span class="line">cd /tmp</span><br><span class="line"></span><br><span class="line">wget us.centos.bz/cdnfly/int_es.sh -O int_es.sh &amp;&amp; chmod +x int_es.sh</span><br><span class="line"></span><br><span class="line">./int_es.sh /home/es</span><br><span class="line"></span><br><span class="line">supervisorctl -c /opt/cdnfly/master/conf/supervisord.conf restart all</span><br><span class="line"></span><br><span class="line">#至此主控设置完成，通过旧主控的账号密码进入可以发现 节点 用户 网站 日志 dns等都恢复了</span><br><span class="line">#接下来只需要对旧节点更换IP即可</span><br></pre></td></tr></table></figure>
+
+<p><strong>旧节点</strong> ：<br>需要将旧节点的旧主控IP替换为新主控的IP</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">#依次在ssh登录每个节点并执行下面命令即可</span><br><span class="line">#将 your_new_ip 替换为你自己的新主控IP</span><br><span class="line"></span><br><span class="line">wget -qO change_ip.sh https://file.1323123.xyz/cdnfly/backup/shell/change_ip.sh &amp;&amp; chmod +x change_ip.sh &amp;&amp; bash change_ip.sh your_new_ip</span><br></pre></td></tr></table></figure>
+
+<p><strong>新节点：</strong><br>新节点安装方式和旧节点安装方式一样，只需要将旧主控IP修改为新主控IP 密码修改为旧主控密码即可<br>旧主控密码忘记了可以在 <code>/opt/cdnfly/master/conf/config.py</code> 可以找到</p>
+<h2 id="十、杂谈"><a href="#十、杂谈" class="headerlink" title="十、杂谈"></a>十、杂谈</h2><p>① 你也可以像我博客一样将境外流量接入到cloudflare加速，国内走优化节点，具体教程可以参考 <a target="_blank" rel="noopener" href="https://blog.tanglu.me/cloudflare-configure/#Custom-Hostnames">cloudflare配置详解</a><br>② <a target="_blank" rel="noopener" href="https://blog.tanglu.me/stop-cc">CC测压</a> 注意不要用源站机器去攻击，可能cdnfly为了回源请求成功 给源站IP加了白名单，我之前遇到这个问题纠结好久还以为是cdnfly规则有问题，最后才知道小丑是我自己…<br>③ 如果源站开启了防御记得将CDN加入白名单<br>④ 主控迁移可以参考官方 <a target="_blank" rel="noopener" href="http://doc.cdnfly.cn/1790368">FAQ</a><br>⑤ cdnfly支持添加泛域名，只要待添加域名的DNS服务商支持泛域名解析即可<br>⑥  <strong>cdnfly统计流量似乎只计算’CDN节点到用户(出站)’这个过程消耗的流量</strong> ，用户到CDN节点(入站)、CDN节点到源服务器(出站)、源服务器到CDN节点(入站)均不计入套餐流量。如果服务器为双向计费请注意设置价格<br>以下是我的测试记录：<br>我先通过套CDN在客户端跑测速(发包收包流量都大)，测得CDN入站流量 1362MB，出站总流量 371MB，CDN套餐显示流量消耗 233MB<br>我又通过客户端批量发包(发包流量小 收包流量大)，测得CDN入站流量 269MB，出站总流量 302MB，CDN套餐显示流量消耗 258MB<br><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://img.uuhu.de/file/hexo/1750671112872_1750670884653.png" alt="Alt Text"><br>⑦ 斯巴达等服务商提供的centos7系统无法安装，需要dd（新的斯巴达centos7镜像已支持）<br>服务器dd centos7的方法可以看我的这篇记录：<a target="_blank" rel="noopener" href="https://blog.tanglu.me/dd/">常见vps dd windows合集</a><br>⑧ 中文域名直接添加会报错，需要在 <a target="_blank" rel="noopener" href="https://www.punycoder.com/">punycoder.com</a> 将中文字符转换成 xn–sfj3b** 格式添加<br>⑨ 主控安装好后可以装宝塔吗？主控装完后会占用80 443端口，单纯装个宝塔是只占用8000端口，宝塔再装nginx会占用80端口，很明显你80端口需要给主控，所以你可以改一下宝塔nginx的端口 比如http改为8080 https改为4433，不建议新手尝试<br>⑩<code>Error： 添加节点失败:原因没有权限</code> <code>错误号： node-23</code> 应该是密码错了，请前往主控的 <code>系统管理</code> &gt; <code>系统升级</code> 中查看密码<br>11、报错 <code>添加节点失败:原因没有权限 node-23</code> ,是因为节点密码没有换成自己的，去主控的系统升级查看</p>
+</article>
+<div class="article-footer">
+    <section id="license">
+      <div class="header"><span>许可协议</span></div>
+      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
+</div>
+    </section>
+    
+    <section id="share">
+      <div class="header"><span>分享文章</span></div>
+      <div class="body">
+        <div class="link"><input class="copy-area" readonly="true" id="copy-link" value="http://example.com/2023/08/07/%E4%BD%BF%E7%94%A8cdnfly%E8%87%AA%E5%BB%BACDN%E5%B9%B6%E9%85%8D%E7%BD%AECC%E9%98%B2%E6%8A%A4/" /></div>
+        <div class="social-wrap dis-select"><a class="social share-item wechat" onclick="util.toggle(&quot;qrcode-wechat&quot;)"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/b32ef3da1162a.svg" /></a><a class="social share-item weibo" target="_blank" rel="external nofollow noopener noreferrer" href="https://service.weibo.com/share/share.php?url=http://example.com/2023/08/07/%E4%BD%BF%E7%94%A8cdnfly%E8%87%AA%E5%BB%BACDN%E5%B9%B6%E9%85%8D%E7%BD%AECC%E9%98%B2%E6%8A%A4/&title=使用cdnfly自建CDN并配置CC防护 - 文一刀&pics=https://img.uuhu.de/file/hexo/1750679610942_Cdnfly.webp&summary=更新：
+2023.3.30 修正了第三节”自建云端的错误”，伪装授权站需要一直存在2023.4.02 修复了国内机器无法连接github的问题，即增加了国内机器可访问的安装脚本2023.4.14 新增了cdnfly设置回源host实现..."><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/80c07e4dbb303.svg" /></a><a class="social share-item email" href="mailto:?subject=使用cdnfly自建CDN并配置CC防护 - 文一刀&amp;body=http://example.com/2023/08/07/%E4%BD%BF%E7%94%A8cdnfly%E8%87%AA%E5%BB%BACDN%E5%B9%B6%E9%85%8D%E7%BD%AECC%E9%98%B2%E6%8A%A4/"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/a1b00e20f425d.svg" /></a><a class="social share-item link" onclick="util.copy(&quot;copy-link&quot;, &quot;复制成功&quot;)"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/8411ed322ced6.svg" /></a></div>
+        
+        <div class="qrcode" id="qrcode-wechat" style="opacity:0;height:0">
+          <img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://api.qrserver.com/v1/create-qr-code/?size=256x256&data=http://example.com/2023/08/07/%E4%BD%BF%E7%94%A8cdnfly%E8%87%AA%E5%BB%BACDN%E5%B9%B6%E9%85%8D%E7%BD%AECC%E9%98%B2%E6%8A%A4/"/>
+        </div>
+        
+      </div>
+    </section>
+    </div>
+
+<div class="related-wrap" id="read-next"><section class="body"><div class="item" id="prev"><div class="note">较新文章</div><a href="/2024/01/13/%E7%88%AC%E5%8F%96%E5%88%AB%E4%BA%BA%E7%BD%91%E7%AB%99%E7%9A%84%E4%BC%98%E9%80%89%E5%8F%8D%E4%BB%A3IP/">爬取别人网站的优选反代IP</a></div><div class="item" id="next"><div class="note">较早文章</div><a href="/2023/08/03/alpine%E7%B3%BB%E7%BB%9F%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/">alpine系统常用命令</a></div></section></div>
+
+<div class="related-wrap" id="related-posts">
+    <section class='header'>
+      <div class='title cap theme'>您可能感兴趣的文章</div>
+    </section>
+    <section class='body'>
+    <div class="related-posts"><a class="item" href="/2023/01/03/Aria2+Rclone实现OneDrive等网盘离线下载/" title="Aria2+Rclone实现OneDrive等网盘离线下载"><span class="title">Aria2+Rclone实现OneDrive等网盘离线下载</span></a></div></section></div>
+
+
+  <div class="related-wrap md-text" id="comments">
+    <section class='header cmt-title cap theme'>
+      <p>快来参与讨论吧~</p>
+
+    </section>
+    <section class='body cmt-body twikoo'>
+      
+
+<div id="twikoo_container"><svg class="loading" style="vertical-align:middle;fill:currentColor;overflow:hidden;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2709"><path d="M832 512c0-176-144-320-320-320V128c211.2 0 384 172.8 384 384h-64zM192 512c0 176 144 320 320 320v64C300.8 896 128 723.2 128 512h64z" p-id="2710"></path></svg></div>
+    </section>
+  </div>
+
+
+
+<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">First</a> 使用 <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.31.0">Stellar 1.31.0</a> 主题创建。<br>本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
+</div></footer>
+<div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
+<div class="widgets">
+
+
+
+<widget class="widget-wrapper toc" id="data-toc" collapse="auto"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E5%89%8D%E8%A8%80"><span class="toc-text">一、前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E5%87%86%E5%A4%87"><span class="toc-text">二、准备</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81cdnfly%E8%87%AA%E5%BB%BA%E4%BA%91%E7%AB%AF"><span class="toc-text">三、cdnfly自建云端</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E4%B8%BB%E6%8E%A7%E6%9C%8D%E5%8A%A1%E5%99%A8%E8%AE%BE%E7%BD%AE"><span class="toc-text">四、主控服务器设置</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1%E3%80%81%E9%A6%96%E5%85%88%E6%9B%B4%E6%96%B0centos7%E6%BA%90"><span class="toc-text">1、首先更新centos7源</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2%E3%80%81%E4%BF%AE%E6%94%B9%E4%B8%BB%E6%8E%A7vps%E7%9A%84hosts%E6%96%87%E4%BB%B6"><span class="toc-text">2、修改主控vps的hosts文件</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3%E3%80%81%E6%A3%80%E6%9F%A5hosts%E6%98%AF%E5%90%A6%E7%94%9F%E6%95%88"><span class="toc-text">3、检查hosts是否生效</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4%E3%80%81%E5%AE%89%E8%A3%85cdnfly%E6%8E%A7%E5%88%B6%E9%9D%A2%E6%9D%BF"><span class="toc-text">4、安装cdnfly控制面板</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81CDN%E8%8A%82%E7%82%B9%E6%9C%8D%E5%8A%A1%E5%99%A8%E9%85%8D%E7%BD%AE"><span class="toc-text">五、CDN节点服务器配置</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1%E3%80%81%E6%9B%B4%E6%96%B0centos7%E7%9A%84%E6%BA%90"><span class="toc-text">1、更新centos7的源</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2%E3%80%81%E6%B7%BB%E5%8A%A0SWAP%E8%99%9A%E6%8B%9F%E5%86%85%E5%AD%98"><span class="toc-text">2、添加SWAP虚拟内存</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3%E3%80%81%E5%AE%89%E8%A3%85%E8%A2%AB%E6%8E%A7%E6%9C%8D%E5%8A%A1"><span class="toc-text">3、安装被控服务</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4%E3%80%81%E5%AE%89%E8%A3%85BBR"><span class="toc-text">4、安装BBR</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#5%E3%80%81%E5%8D%B8%E8%BD%BD%E8%8A%82%E7%82%B9"><span class="toc-text">5、卸载节点</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AD%E3%80%81cdnfly%E6%8E%A7%E5%88%B6%E5%8F%B0%E5%BF%85%E8%A6%81%E9%85%8D%E7%BD%AE"><span class="toc-text">六、cdnfly控制台必要配置</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1%E3%80%81%E6%B7%BB%E5%8A%A0CDN%E8%8A%82%E7%82%B9"><span class="toc-text">1、添加CDN节点</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2%E3%80%81DNS%E8%AE%BE%E7%BD%AE"><span class="toc-text">2、DNS设置</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3%E3%80%81%E7%BA%BF%E8%B7%AF%E5%88%86%E7%BB%84-%E8%AE%BE%E7%BD%AE%E5%88%86%E7%BA%BF%E8%B7%AF%E8%A7%A3%E6%9E%90"><span class="toc-text">3、线路分组 设置分线路解析</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4%E3%80%81%E6%B7%BB%E5%8A%A0%E5%A5%97%E9%A4%90"><span class="toc-text">4、添加套餐</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#5%E3%80%81%E6%B7%BB%E5%8A%A0%E7%BD%91%E7%AB%99"><span class="toc-text">5、添加网站</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#6%E3%80%81%E8%8A%82%E7%82%B9%E7%9B%91%E6%8E%A7%E4%BB%8B%E7%BB%8D"><span class="toc-text">6、节点监控介绍</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#7%E3%80%81%E5%8D%95%E8%8A%82%E7%82%B9%E8%AE%BE%E7%BD%AE"><span class="toc-text">7、单节点设置</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#8%E3%80%81%E7%A6%81%E7%94%A8API-%E5%A4%9A%E7%94%A8%E6%88%B7%E5%BF%85%E8%AE%BE%E7%BD%AE-%E9%87%8D%E8%A6%81%E9%87%8D%E8%A6%81%E9%87%8D%E8%A6%81%EF%BC%81%EF%BC%81%EF%BC%81"><span class="toc-text">8、禁用API(多用户必设置)(重要重要重要！！！)</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%83%E3%80%81cdnfly%E6%8E%A7%E5%88%B6%E5%8F%B0%E6%8E%A8%E8%8D%90%E9%85%8D%E7%BD%AE"><span class="toc-text">七、cdnfly控制台推荐配置</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1%E3%80%81%E8%AE%BE%E7%BD%AECC%E9%98%B2%E6%8A%A4"><span class="toc-text">1、设置CC防护</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2%E3%80%81%E8%AE%BE%E7%BD%AECDN%E7%BC%93%E5%AD%98%E6%96%87%E4%BB%B6%E7%B1%BB%E5%9E%8B"><span class="toc-text">2、设置CDN缓存文件类型</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3%E3%80%81%E8%AE%BE%E7%BD%AECDN%E8%8A%82%E7%82%B9%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%BC%93%E5%AD%98%E5%A4%A7%E5%B0%8F%E5%92%8C%E6%9C%80%E5%A4%A7%E5%B8%A6%E5%AE%BD"><span class="toc-text">3、设置CDN节点服务器缓存大小和最大带宽</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4%E3%80%81%E7%94%B3%E8%AF%B7%E8%AF%81%E4%B9%A6"><span class="toc-text">4、申请证书</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AB%E3%80%81cdnfly%E6%8E%A7%E5%88%B6%E5%8F%B0%E5%85%B6%E4%BB%96%E9%85%8D%E7%BD%AE"><span class="toc-text">八、cdnfly控制台其他配置</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1%E3%80%81%E7%9F%AD%E4%BF%A1-%E9%82%AE%E7%AE%B1%E6%8F%90%E7%A4%BA"><span class="toc-text">1、短信&#x2F;邮箱提示</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2%E3%80%81%E5%AF%B9%E6%8E%A5%E6%94%AF%E4%BB%98"><span class="toc-text">2、对接支付</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3%E3%80%81%E8%BD%AC%E5%8F%91"><span class="toc-text">3、转发</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4%E3%80%81%E9%9D%A2%E6%9D%BF%E9%80%9A%E8%BF%87%E5%9F%9F%E5%90%8D%E8%AE%BF%E9%97%AE"><span class="toc-text">4、面板通过域名访问</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#5%E3%80%81%E8%8A%82%E7%82%B9%E7%9B%91%E6%8E%A7%E5%92%8C%E5%AE%95%E6%9C%BA%E8%87%AA%E5%8A%A8%E5%88%87%E6%8D%A2"><span class="toc-text">5、节点监控和宕机自动切换</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#6%E3%80%81cdnfly%E8%AE%BE%E7%BD%AE%E5%8F%8D%E4%BB%A3"><span class="toc-text">6、cdnfly设置反代</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B9%9D%E3%80%81%E5%A4%87%E4%BB%BD%E5%92%8C%E6%81%A2%E5%A4%8D"><span class="toc-text">九、备份和恢复</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1%E3%80%81%E5%A4%87%E4%BB%BD"><span class="toc-text">1、备份</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2%E3%80%81%E6%81%A2%E5%A4%8D"><span class="toc-text">2、恢复</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8D%81%E3%80%81%E6%9D%82%E8%B0%88"><span class="toc-text">十、杂谈</span></a></li></ol></div><div class="widget-footer">
+
+<a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12c0-4.714 0-7.071 1.464-8.536C4.93 2 7.286 2 12 2c4.714 0 7.071 0 8.535 1.464C22 4.93 22 7.286 22 12c0 4.714 0 7.071-1.465 8.535C19.072 22 16.714 22 12 22s-7.071 0-8.536-1.465C2 19.072 2 16.714 2 12Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/></g></svg><span>回到顶部</span></a><a class="buttom" onclick="util.scrollComment()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M10.46 1.25h3.08c1.603 0 2.86 0 3.864.095c1.023.098 1.861.3 2.6.752a5.75 5.75 0 0 1 1.899 1.899c.452.738.654 1.577.752 2.6c.095 1.004.095 2.261.095 3.865v1.067c0 1.141 0 2.036-.05 2.759c-.05.735-.153 1.347-.388 1.913a5.75 5.75 0 0 1-3.112 3.112c-.805.334-1.721.408-2.977.43a10.81 10.81 0 0 0-.929.036c-.198.022-.275.054-.32.08c-.047.028-.112.078-.224.232c-.121.166-.258.396-.476.764l-.542.916c-.773 1.307-2.69 1.307-3.464 0l-.542-.916a10.605 10.605 0 0 0-.476-.764c-.112-.154-.177-.204-.224-.232c-.045-.026-.122-.058-.32-.08c-.212-.023-.49-.03-.93-.037c-1.255-.021-2.171-.095-2.976-.429A5.75 5.75 0 0 1 1.688 16.2c-.235-.566-.338-1.178-.389-1.913c-.049-.723-.049-1.618-.049-2.76v-1.066c0-1.604 0-2.86.095-3.865c.098-1.023.3-1.862.752-2.6a5.75 5.75 0 0 1 1.899-1.899c.738-.452 1.577-.654 2.6-.752C7.6 1.25 8.857 1.25 10.461 1.25M6.739 2.839c-.914.087-1.495.253-1.959.537A4.25 4.25 0 0 0 3.376 4.78c-.284.464-.45 1.045-.537 1.96c-.088.924-.089 2.11-.089 3.761v1c0 1.175 0 2.019.046 2.685c.045.659.131 1.089.278 1.441a4.25 4.25 0 0 0 2.3 2.3c.515.214 1.173.294 2.429.316h.031c.398.007.747.013 1.037.045c.311.035.616.104.909.274c.29.17.5.395.682.645c.169.232.342.525.538.856l.559.944a.52.52 0 0 0 .882 0l.559-.944c.196-.331.37-.624.538-.856c.182-.25.392-.476.682-.645c.293-.17.598-.24.909-.274c.29-.032.639-.038 1.037-.045h.032c1.255-.022 1.913-.102 2.428-.316a4.25 4.25 0 0 0 2.3-2.3c.147-.352.233-.782.278-1.441c.046-.666.046-1.51.046-2.685v-1c0-1.651 0-2.837-.089-3.762c-.087-.914-.253-1.495-.537-1.959a4.25 4.25 0 0 0-1.403-1.403c-.464-.284-1.045-.45-1.96-.537c-.924-.088-2.11-.089-3.761-.089h-3c-1.651 0-2.837 0-3.762.089" clip-rule="evenodd"/><path fill="currentColor" d="M9 11a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0"/></svg><span>参与讨论</span></a></div></widget>
+</div></aside><div class='float-panel'>
+  <button type='button' style='display:none' class='laptop-only rightbar-toggle mobile' onclick='sidebar.rightbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>
+  </button>
+  <button type='button' style='display:none' class='mobile-only leftbar-toggle mobile' onclick='sidebar.leftbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 11c0-3.771 0-5.657 1.172-6.828C4.343 3 6.229 3 10 3h4c3.771 0 5.657 0 6.828 1.172C22 5.343 22 7.229 22 11v2c0 3.771 0 5.657-1.172 6.828C19.657 21 17.771 21 14 21h-4c-3.771 0-5.657 0-6.828-1.172C2 18.657 2 16.771 2 13z"/><path id="sep" stroke-linecap="round" d="M5.5 10h6m-5 4h4m4.5 7V3"/></g></svg>
+  </button>
+</div>
+</div><div class="scripts"><script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"First","sameAs":[],"image":"https://img.uuhu.de/file/1750642545526_20170227173736_yWa2R.webp"},"dateCreated":"2023-08-07T12:45:00+08:00","dateModified":"2025-06-24T15:05:41+08:00","datePublished":"2023-08-07T12:45:00+08:00","description":"","headline":"使用cdnfly自建CDN并配置CC防护","mainEntityOfPage":{"@type":"WebPage","@id":"http://example.com/2023/08/07/%E4%BD%BF%E7%94%A8cdnfly%E8%87%AA%E5%BB%BACDN%E5%B9%B6%E9%85%8D%E7%BD%AECC%E9%98%B2%E6%8A%A4/"},"publisher":{"@type":"Organization","name":"First","sameAs":[],"image":"https://img.uuhu.de/file/1750642545526_20170227173736_yWa2R.webp","logo":{"@type":"ImageObject","url":"https://img.uuhu.de/file/1750642545526_20170227173736_yWa2R.webp"}},"url":"http://example.com/2023/08/07/%E4%BD%BF%E7%94%A8cdnfly%E8%87%AA%E5%BB%BACDN%E5%B9%B6%E9%85%8D%E7%BD%AECC%E9%98%B2%E6%8A%A4/","thumbnailUrl":"https://img.uuhu.de/file/hexo/1750679610942_Cdnfly.webp","image":1}</script>
+
+
+<script type="text/javascript">
+  window.canonical = {"originalHost":null,"officialHosts":["localhost"],"encoded":""};
+  const ctx = {
+    date_suffix: {
+      just: `刚刚`,
+      min: `分钟前`,
+      hour: `小时前`,
+      day: `天前`,
+    },
+    root : `/`,
+    tag_plugins: {
+      chat: Object.assign({"api":"https://siteinfo.listentothewind.cn/api/v1"}),
+    }
+  };
+
+  // required plugins (only load if needs)
+  if (`local_search`) {
+    ctx.search = {};
+    ctx.search.service = `local_search`;
+    if (ctx.search.service == 'local_search') {
+      let service_obj = Object.assign({}, `{"field":"all","path":"/search.json","content":true,"skip_search":[],"codeblock":true,"sort":"-date"}`);
+      ctx.search[ctx.search.service] = service_obj;
+    }
+  }
+  const def = {
+    avatar: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/3442075.svg`,
+    cover: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/cover/76b86c0226ffd.svg`,
+  };
+  const deps = {
+    jquery: `https://gcore.jsdelivr.net/npm/jquery@3.7/dist/jquery.min.js`,
+    marked: `https://gcore.jsdelivr.net/npm/marked@13.0/lib/marked.umd.min.js`
+  }
+  
+
+</script>
+
+<script type="text/javascript">
+  function RunItem() {
+    this.list = []; // 存放回调函数
+    this.start = () => {
+      for (var i = 0; i < this.list.length; i++) {
+        this.list[i].run();
+      }
+    };
+    this.push = (fn, name, setRequestAnimationFrame = true) => {
+      let myfn = fn
+      if (setRequestAnimationFrame) {
+        myfn = () => {
+          utils.requestAnimationFrame(fn)
+        }
+      }
+      var f = new Item(myfn, name);
+      this.list.push(f);
+    };
+    this.remove = (name) => {
+      for (let index = 0; index < this.list.length; index++) {
+        const e = this.list[index];
+        if (e.name == name) {
+          this.list.splice(index, 1);
+        }
+      }
+    }
+    // 构造一个可以run的对象
+    function Item(fn, name) {
+      // 函数名称
+      this.name = name || fn.name;
+      // run方法
+      this.run = () => {
+        try {
+          fn()
+        } catch (error) {
+          console.log(error);
+        }
+      };
+    }
+  }
+
+  const utils = {
+    // 懒加载 css https://github.com/filamentgroup/loadCSS
+    css: (href, before, media, attributes) => {
+      var doc = window.document;
+      var ss = doc.createElement("link");
+      var ref;
+      if (before) {
+        ref = before;
+      } else {
+        var refs = (doc.body || doc.getElementsByTagName("head")[0]).childNodes;
+        ref = refs[refs.length - 1];
+      }
+      var sheets = doc.styleSheets;
+      if (attributes) {
+        for (var attributeName in attributes) {
+          if (attributes.hasOwnProperty(attributeName)) {
+            ss.setAttribute(attributeName, attributes[attributeName]);
+          }
+        }
+      }
+      ss.rel = "stylesheet";
+      ss.href = href;
+      ss.media = "only x";
+      function ready(cb) {
+        if (doc.body) {
+          return cb();
+        }
+        setTimeout(function () {
+          ready(cb);
+        });
+      }
+      ready(function () {
+        ref.parentNode.insertBefore(ss, before ? ref : ref.nextSibling);
+      });
+      var onloadcssdefined = function (cb) {
+        var resolvedHref = ss.href;
+        var i = sheets.length;
+        while (i--) {
+          if (sheets[i].href === resolvedHref) {
+            return cb();
+          }
+        }
+        setTimeout(function () {
+          onloadcssdefined(cb);
+        });
+      };
+      function loadCB() {
+        if (ss.addEventListener) {
+          ss.removeEventListener("load", loadCB);
+        }
+        ss.media = media || "all";
+      }
+      if (ss.addEventListener) {
+        ss.addEventListener("load", loadCB);
+      }
+      ss.onloadcssdefined = onloadcssdefined;
+      onloadcssdefined(loadCB);
+      return ss;
+    },
+
+    js: (src, opt) => new Promise((resolve, reject) => {
+      var script = document.createElement('script');
+      if (src.startsWith('/')) {
+        src = ctx.root + src.substring(1);
+      }
+      script.src = src;
+      if (opt) {
+        for (let key of Object.keys(opt)) {
+          script[key] = opt[key]
+        }
+      } else {
+        // 默认异步，如果需要同步，第二个参数传入 {} 即可
+        script.async = true
+      }
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function () {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    }),
+
+    jq: (fn) => {
+      if (typeof jQuery === 'undefined') {
+        utils.js(deps.jquery).then(fn)
+      } else {
+        fn()
+      }
+    },
+
+    onLoading: (el) => {
+      if (el) {
+        $(el).append('<div class="loading-wrap"><svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" stroke-opacity=".3" d="M12 3C16.9706 3 21 7.02944 21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="1.3s" values="60;0"/></path><path stroke-dasharray="15" stroke-dashoffset="15" d="M12 3C16.9706 3 21 7.02944 21 12"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.3s" values="15;0"/><animateTransform attributeName="transform" dur="1.5s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"/></path></g></svg></div>');
+      }
+    },
+    onLoadSuccess: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap').remove();
+      }
+    },
+    onLoadFailure: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap svg').remove();
+        $(el).find('.loading-wrap').append('<svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" d="M12 3L21 20H3L12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.5s" values="60;0"/></path><path stroke-dasharray="6" stroke-dashoffset="6" d="M12 10V14"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.6s" dur="0.2s" values="6;0"/></path></g><circle cx="12" cy="17" r="1" fill="currentColor" fill-opacity="0"><animate fill="freeze" attributeName="fill-opacity" begin="0.8s" dur="0.4s" values="0;1"/></circle></svg>');
+        $(el).find('.loading-wrap').addClass('error');
+      }
+    },
+    request: (el, url, callback, onFailure) => {
+      let retryTimes = 3;
+      utils.onLoading(el);
+      function req() {
+        return new Promise((resolve, reject) => {
+          let status = 0; // 0 等待 1 完成 2 超时
+          let timer = setTimeout(() => {
+            if (status === 0) {
+              status = 2;
+              timer = null;
+              reject('请求超时');
+              if (retryTimes == 0) {
+                onFailure();
+              }
+            }
+          }, 5000);
+          fetch(url).then(function (response) {
+            if (status !== 2) {
+              clearTimeout(timer);
+              resolve(response);
+              timer = null;
+              status = 1;
+            }
+            if (response.ok) {
+              return response;
+            }
+            throw new Error('Network response was not ok.');
+          }).then(function (data) {
+            retryTimes = 0;
+            utils.onLoadSuccess(el);
+            callback(data);
+          }).catch(function (error) {
+            if (retryTimes > 0) {
+              retryTimes -= 1;
+              setTimeout(() => {
+                req();
+              }, 5000);
+            } else {
+              utils.onLoadFailure(el);
+              onFailure();
+            }
+          });
+        });
+      }
+      req();
+    },
+    /********************** requestAnimationFrame ********************************/
+    // 1、requestAnimationFrame 会把每一帧中的所有 DOM 操作集中起来，在一次重绘或回流中就完成，并且重绘或回流的时间间隔紧紧跟随浏览器的刷新频率，一般来说，这个频率为每秒60帧。
+    // 2、在隐藏或不可见的元素中，requestAnimationFrame 将不会进行重绘或回流，这当然就意味着更少的的 cpu，gpu 和内存使用量。
+    requestAnimationFrame: (fn) => {
+      if (!window.requestAnimationFrame) {
+        window.requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame;
+      }
+      window.requestAnimationFrame(fn)
+    },
+    dark: {},
+  };
+
+  // utils.dark.mode 当前模式 dark or light
+  // utils.dark.toggle() 暗黑模式触发器
+  // utils.dark.push(callBack[,"callBackName"]) 传入触发器回调函数
+  utils.dark.method = {
+    toggle: new RunItem(),
+  };
+  utils.dark = Object.assign(utils.dark, {
+    push: utils.dark.method.toggle.push,
+  });
+</script>
+<script>
+  const sidebar = {
+    leftbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    rightbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('rightbar');
+        l_body.removeAttribute('leftbar');
+      }
+    },
+    dismiss: () => {
+      if (l_body) {
+        l_body.removeAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    toggleTOC: () => {
+      document.querySelector('#data-toc').classList.toggle('collapse');
+    }
+  }
+</script>
+<script type="text/javascript">
+  (() => {
+    const tagSwitchers = document.querySelectorAll('.tag-subtree.parent-tag > a > .tag-switcher-wrapper')
+    for (const tagSwitcher of tagSwitchers) {
+      tagSwitcher.addEventListener('click', (e) => {
+        const parent = e.target.closest('.tag-subtree.parent-tag')
+        parent.classList.toggle('expanded')
+        e.preventDefault()
+      })
+    }
+
+    // Get active tag from query string, then activate it.
+    const urlParams = new URLSearchParams(window.location.search)
+    const activeTag = urlParams.get('tag')
+    if (activeTag) {
+      let tag = document.querySelector(`.tag-subtree[data-tag="${activeTag}"]`)
+      if (tag) {
+        tag.querySelector('a').classList.add('active')
+        
+        while (tag) {
+          tag.classList.add('expanded')
+          tag = tag.parentElement.closest('.tag-subtree.parent-tag')
+        }
+      }
+    }
+  })()
+</script>
+
+
+<!-- required -->
+<script src="/js/main.js?v=1.31.0" defer></script>
+
+<script type="text/javascript">
+  const applyTheme = (theme) => {
+    if (theme === 'auto') {
+      document.documentElement.removeAttribute('data-theme')
+    } else {
+      document.documentElement.setAttribute('data-theme', theme)
+    }
+
+    applyThemeToGiscus(theme)
+  }
+
+  const applyThemeToGiscus = (theme) => {
+    theme = theme === 'auto' ? 'preferred_color_scheme' : theme
+
+    const cmt = document.getElementById('giscus')
+    if (cmt) {
+      // This works before giscus load.
+      cmt.setAttribute('data-theme', theme)
+    }
+
+    const iframe = document.querySelector('#comments > section.giscus > iframe')
+    if (iframe) {
+      // This works after giscus loaded.
+      const src = iframe.src
+      const newSrc = src.replace(/theme=[\w]+/, `theme=${theme}`)
+      iframe.src = newSrc
+    }
+  }
+
+  const switchTheme = () => {
+    // light -> dark -> auto -> light -> ...
+    const currentTheme = document.documentElement.getAttribute('data-theme')
+    let newTheme;
+    switch (currentTheme) {
+      case 'light':
+        newTheme = 'dark'
+        break
+      case 'dark':
+        newTheme = 'auto'
+        break
+      default:
+        newTheme = 'light'
+    }
+    applyTheme(newTheme)
+    window.localStorage.setItem('Stellar.theme', newTheme)
+    utils.dark.mode = newTheme === 'auto' ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light") : newTheme;
+    utils.dark.method.toggle.start();
+
+    const messages = {
+      light: `切换到浅色模式`,
+      dark: `切换到深色模式`,
+      auto: `切换到跟随系统配色`,
+    }
+    hud?.toast?.(messages[newTheme])
+  }
+
+  (() => {
+    // Apply user's preferred theme, if any.
+    const theme = window.localStorage.getItem('Stellar.theme')
+    if (theme !== null) {
+      applyTheme(theme)
+    } else {
+      utils.dark.mode = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    }
+    utils.dark.method.toggle.start();
+  })()
+</script>
+
+
+<!-- optional -->
+
+  <script type="module">
+  const el = document.getElementById('twikoo_container');
+  util.viewportLazyload(el, load_twikoo, false);
+
+  function load_twikoo() {
+    if (!el) return;
+    utils.js('https://gcore.jsdelivr.net/npm/twikoo@1.6/dist/twikoo.all.min.js', {defer: true}).then(function () {
+      const path = el.getAttribute('comment_id') ?? decodeURI(window.location.pathname);
+      twikoo.init(Object.assign({"js":"https://gcore.jsdelivr.net/npm/twikoo@1.6/dist/twikoo.all.min.js","envId":"https://twikoo.uuhu.de"}, {
+        el: '#twikoo_container',
+        path: path,
+      }));
+    });
+  }
+</script>
+
+
+
+<script defer>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.services = Object.assign({}, JSON.parse(`{"mdrender":{"js":"/js/services/mdrender.js"},"siteinfo":{"js":"/js/services/siteinfo.js","api":null},"ghinfo":{"js":"/js/services/ghinfo.js"},"sites":{"js":"/js/services/sites.js"},"friends":{"js":"/js/services/friends.js"},"friends_and_posts":{"js":"/js/services/friends_and_posts.js"},"timeline":{"js":"/js/services/timeline.js"},"fcircle":{"js":"/js/services/fcircle.js"},"weibo":{"js":"/js/services/weibo.js"},"memos":{"js":"/js/services/memos.js"},"voice":{"js":"/js/plugins/voice.js"},"video":{"js":"/js/plugins/video.js"},"download-file":{"js":"/js/plugins/download-file.js"},"twikoo":{"js":"/js/services/twikoo_latest_comment.js"},"waline":{"js":"/js/services/waline_latest_comment.js"},"artalk":{"js":"/js/services/artalk_latest_comment.js"},"giscus":{"js":"/js/services/giscus_latest_comment.js"}}`));
+    for (let id of Object.keys(ctx.services)) {
+      const js = ctx.services[id].js;
+      if (id == 'siteinfo') {
+        ctx.cardlinks = document.querySelectorAll('a.link-card[cardlink]');
+        if (ctx.cardlinks?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            setCardLink(ctx.cardlinks);
+          });
+        }
+      } else if (id == 'voice') {
+        ctx.voiceAudios = document.querySelectorAll('.voice>audio');
+        if (ctx.voiceAudios?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            createVoiceDom(ctx.voiceAudios);
+          });
+        }
+      } else if (id == 'video') {
+        ctx.videos = document.querySelectorAll('.video>video');
+        if (ctx.videos?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            videoEvents(ctx.videos);
+          });
+        }
+      } else if (id == 'download-file') {
+        ctx.files = document.querySelectorAll('.file');
+        if (ctx.files?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            downloadFileEvent(ctx.files);
+          });
+        }
+      } else {
+        const els = document.getElementsByClassName(`ds-${id}`);
+        if (els?.length > 0) {
+          utils.jq(() => {
+            if (id == 'timeline' || 'memos' || 'marked') {
+              utils.js(deps.marked).then(function () {
+                utils.js(js, { defer: true });
+              });
+            } else {
+              utils.js(js, { defer: true });
+            }
+          });
+        }
+      }
+    }
+
+    // chat iphone time
+    let phoneTimes = document.querySelectorAll('.chat .status-bar .time');
+
+    if (phoneTimes.length > 0) {
+      NowTime();
+      var date = new Date();
+      var sec = date.getSeconds();
+      var firstAdjustInterval = setInterval(firstAdjustTime, 1000 * (60 - sec));
+    }
+
+    function firstAdjustTime() {
+      NowTime();
+      clearInterval(firstAdjustInterval);
+      setInterval(NowTime, 1000 * 60);
+    }
+
+    function NowTime() {
+      for (let i = 0; i < phoneTimes.length; ++i) {
+        var timeSpan = phoneTimes[i];
+        var date = new Date();
+        var hour = date.getHours();
+        var min = date.getMinutes();
+        timeSpan.innerHTML = check(hour) + ":" + check(min);
+      }
+    };
+
+    function check(val) {
+      if (val < 10) {
+        return ("0" + val);
+      }
+      return (val);
+    }
+
+    // chat quote
+    const chat_quote_obverser = new IntersectionObserver((entries, observer) => {
+      entries.filter((entry) => { return entry.isIntersecting }).sort((a, b) => a.intersectionRect.y !== b.intersectionRect.y ? a.intersectionRect.y - b.intersectionRect.y : a.intersectionRect.x - b.intersectionRect.x).forEach((entry, index) => {
+          observer.unobserve(entry.target);
+          setTimeout(() => {
+            entry.target.classList.add('quote-blink');
+            setTimeout(() => {
+              entry.target.classList.remove('quote-blink');
+            }, 1000);
+          }, Math.max(100, 16) * (index + 1));
+        });
+    });
+
+    var chatQuotes = document.querySelectorAll(".chat .talk .quote");
+    chatQuotes.forEach((quote) => {
+      quote.addEventListener('click', function () {
+        var chatCellDom = document.getElementById("quote-" + quote.getAttribute("quotedCellTag"));
+        if (chatCellDom) {
+          var chatDiv = chatCellDom.parentElement;
+          var mid = chatDiv.clientHeight / 2;
+          var offsetTop = chatCellDom.offsetTop;
+          if (offsetTop > mid - chatCellDom.clientHeight / 2) {
+            chatDiv.scrollTo({
+              top: chatCellDom.offsetTop - mid + chatCellDom.clientHeight / 2,
+              behavior: "smooth"
+            });
+          } else {
+            chatDiv.scrollTo({
+              top: 0,
+              behavior: "smooth"
+            });
+          }
+          chat_quote_obverser.observe(chatCellDom);
+        }
+      });
+    });
+  });
+</script>
+
+<script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.search = {
+      path: `/search.json`,
+    }
+    utils.js('/js/search/local-search.js', { defer: true });
+  });
+</script><script>
+  window.FPConfig = {
+    delay: 0,
+    ignoreKeywords: [],
+    maxRPS: 5,
+    hoverDelay: 25
+  };
+</script>
+<script defer src="https://gcore.jsdelivr.net/npm/flying-pages@2/flying-pages.min.js"></script><script defer src="https://gcore.jsdelivr.net/npm/vanilla-lazyload@19.1/dist/lazyload.min.js"></script>
+<script>
+  // https://www.npmjs.com/package/vanilla-lazyload
+  // Set the options globally
+  // to make LazyLoad self-initialize
+  window.lazyLoadOptions = {
+    elements_selector: ".lazy",
+  };
+  // Listen to the initialization event
+  // and get the instance of LazyLoad
+  window.addEventListener(
+    "LazyLoad::Initialized",
+    function (event) {
+      window.lazyLoadInstance = event.detail.instance;
+    },
+    false
+  );
+  document.addEventListener('DOMContentLoaded', function () {
+    window.lazyLoadInstance?.update();
+  });
+</script><script>
+  ctx.fancybox = {
+    selector: `.timenode p>img`,
+    css: `https://gcore.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.css`,
+    js: `https://gcore.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.umd.js`
+  };
+  var selector = '[data-fancybox]:not(.error)';
+  if (ctx.fancybox.selector) {
+    selector += `, ${ctx.fancybox.selector}`
+  }
+  var needFancybox = document.querySelectorAll(selector).length !== 0;
+  if (!needFancybox) {
+    const els = document.getElementsByClassName('ds-memos');
+    if (els != undefined && els.length > 0) {
+      needFancybox = true;
+    }
+  }
+  if (needFancybox) {
+    utils.css(ctx.fancybox.css);
+    utils.js(ctx.fancybox.js, { defer: true }).then(function () {
+      Fancybox.bind(selector, {
+        hideScrollbar: false,
+        Thumbs: {
+          autoStart: false,
+        },
+        caption: (fancybox, slide) => {
+          return slide.triggerEl.alt || slide.triggerEl.dataset.caption || null
+        }
+      });
+    })
+  }
+</script>
+<script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    const swiper_api = document.getElementById('swiper-api');
+    if (swiper_api != undefined) {
+      utils.css(`https://unpkg.com/swiper@10.3/swiper-bundle.min.css`);
+      utils.js(`https://unpkg.com/swiper@10.3/swiper-bundle.min.js`, { defer: true }).then(function () {
+        const effect = swiper_api.getAttribute('effect') || '';
+        var swiper = new Swiper('.swiper#swiper-api', {
+          slidesPerView: 'auto',
+          spaceBetween: 8,
+          centeredSlides: true,
+          effect: effect,
+          rewind: true,
+          pagination: {
+            el: '.swiper-pagination',
+            clickable: true,
+          },
+          navigation: {
+            nextEl: '.swiper-button-next',
+            prevEl: '.swiper-button-prev',
+          },
+        });
+      })
+    }
+  });
+</script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    window.codeElements = document.querySelectorAll('.code');
+    if (window.codeElements.length > 0) {
+      ctx.copycode = {
+        default_text: `Copy`,
+        success_text: `Copied`,
+        toast: `复制成功`,
+      };
+      utils.js('/js/plugins/copycode.js');
+    }
+  });
+</script>
+
+
+<!-- inject -->
+
+</div></body></html>
