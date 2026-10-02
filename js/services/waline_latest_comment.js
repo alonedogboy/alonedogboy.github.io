@@ -1,17 +1,20 @@
-utils.jq(() => {
-    $(function () {
-      const els = document.getElementsByClassName('ds-waline');
+document.currentScript.stellarMount = function (root, context) {
+  const utils = context.serviceUtils;
+
+  const els = root.getElementsByClassName('ds-waline');
       for (var i = 0; i < els.length; i++) {
         const el = els[i];
         const limit = parseInt(el.getAttribute('limit')) || 10;
-        const apiBase = el.getAttribute('api');
+        const apiBase = el.dataset.api;
         if (apiBase == null) {
           continue;
         }
         const api = apiBase + '/comment?type=recent&count=' + limit;
         const default_avatar = def.avatar;
         utils.request(el, api, async resp => {
-          const data = await resp.json();
+          const payload = await resp.json();
+          // 兼容旧版数组与新版 { data: [...] } 返回结构（#630）
+          const data = Array.isArray(payload) ? payload : (payload && Array.isArray(payload.data) ? payload.data : []);
           data.forEach((item, i) => {
             var cell = '<div class="timenode" index="' + i + '">';
             cell += '<div class="header">';
@@ -25,9 +28,9 @@ utils.jq(() => {
             cell += item.comment.replace(/<a\b[^>]*>(.*?)<\/a>/g, '$1');
             cell += '</a>';
             cell += '</div>';
-            $(el).append(cell);
+            utils.dom(el).append(cell);
           });
         });
       }
-    });
-  });
+
+};
