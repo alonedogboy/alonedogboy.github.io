@@ -57,42 +57,10 @@ body {
   margin-top: 12px;
 }
 
-.listing-nav__surface,
-.listing-nav__surface.is-pinned {
+.listing-nav__surface {
   background: var(--blog-card);
   border: 1px solid var(--blog-line);
-  border-radius: 12px;
   box-shadow: var(--blog-shadow);
-}
-
-.listing-nav nav {
-  padding: 4px;
-}
-
-.listing-nav nav a {
-  border-radius: 8px;
-  padding: 6px 14px;
-  font-size: 14px;
-  line-height: 1.4;
-  margin: 0;
-  background: transparent;
-  text-decoration: none;
-}
-
-.listing-nav nav a + a {
-  margin-left: 4px;
-}
-
-.listing-nav nav a:hover,
-.listing-nav nav a:focus-visible {
-  background: var(--bg-a50);
-}
-
-.listing-nav nav a.active,
-.listing-nav nav a.active:hover {
-  background: var(--theme);
-  color: #fff;
-  text-decoration: none;
 }
 
 .post-list .post-card-wrap {
