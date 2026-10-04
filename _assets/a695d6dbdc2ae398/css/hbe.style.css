@@ -1,0 +1,334 @@
+:root {
+  --encrypt-ink: var(--text, #243244);
+  --encrypt-muted: var(--blog-muted, #5d6975);
+  --encrypt-paper: var(--blog-reading-paper, rgb(255 255 255 / 96%));
+  --encrypt-card: var(--blog-card, rgb(255 255 255 / 58%));
+  --encrypt-line: var(--blog-line, rgb(45 62 80 / 9%));
+  --encrypt-theme: var(--theme, #38b5ef);
+  --encrypt-shadow: var(--blog-shadow, 0 1px 2px rgb(35 45 55 / 5%));
+}
+
+.hbe,
+.hbe::before,
+.hbe::after {
+  box-sizing: border-box;
+}
+
+.hbe-container {
+  position: relative;
+  width: 100%;
+  max-width: 720px;
+  margin: 24px auto 28px;
+  padding: 20px 24px 22px;
+  overflow: hidden;
+  border: 1px solid var(--encrypt-line);
+  border-radius: 12px;
+  background: var(--encrypt-paper);
+  color: var(--encrypt-ink);
+  box-shadow: var(--encrypt-shadow);
+}
+
+.hbe-container::after {
+  position: absolute;
+  right: 24px;
+  bottom: 0;
+  width: 72px;
+  height: 3px;
+  border-radius: 3px 3px 0 0;
+  background: var(--encrypt-theme);
+  content: '';
+  opacity: .72;
+}
+
+.hbe-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 28px;
+  margin-bottom: 18px;
+  color: var(--encrypt-muted);
+}
+
+.hbe-lock-mark {
+  position: relative;
+  display: inline-block;
+  flex: 0 0 18px;
+  width: 18px;
+  height: 14px;
+  border: 1.5px solid var(--encrypt-theme);
+  border-radius: 4px;
+}
+
+.hbe-lock-mark::before {
+  position: absolute;
+  top: -9px;
+  left: 3px;
+  width: 10px;
+  height: 10px;
+  border: 1.5px solid var(--encrypt-theme);
+  border-bottom: 0;
+  border-radius: 8px 8px 0 0;
+  content: '';
+}
+
+.hbe-lock-mark::after {
+  position: absolute;
+  top: 4px;
+  left: 7px;
+  width: 3px;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--encrypt-theme);
+  content: '';
+}
+
+.hbe-lock-mark--open::before {
+  transform: translate(-2px, -2px) rotate(-28deg);
+  transform-origin: right bottom;
+}
+
+.hbe-kicker {
+  color: var(--encrypt-ink);
+  font-size: .82rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.hbe-header-line {
+  flex: 1 1 auto;
+  height: 1px;
+  min-width: 24px;
+  background: var(--encrypt-line);
+}
+
+.hbe-header-note {
+  font-size: .76rem;
+  white-space: nowrap;
+}
+
+.hbe-content {
+  padding: 0;
+  text-align: left;
+  font-size: 1rem;
+}
+
+.hbe-input {
+  position: relative;
+  display: grid;
+  grid-template-areas:
+    'label label'
+    'input submit';
+  grid-template-columns: minmax(0, 1fr) 46px;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  float: none !important;
+  text-align: left;
+}
+
+/* The plugin's themes add these classes to the same nodes. Reset them here. */
+.hbe-input-shrink,
+.hbe-input-field-shrink,
+.hbe-input-label-shrink,
+.hbe-input-label-content-shrink,
+.hbe-input-field-default,
+.hbe-input-label-default,
+.hbe-input-label-content-default,
+.hbe-input-field-up,
+.hbe-input-label-up,
+.hbe-input-label-content-up,
+.hbe-input-field-wave,
+.hbe-input-label-wave,
+.hbe-input-label-content-wave,
+.hbe-input-field-flip,
+.hbe-input-label-flip,
+.hbe-input-label-content-flip,
+.hbe-input-field-xray,
+.hbe-input-label-xray,
+.hbe-input-label-content-xray,
+.hbe-input-field-blink,
+.hbe-input-label-blink,
+.hbe-input-label-content-blink,
+.hbe-input-field-surge,
+.hbe-input-label-surge,
+.hbe-input-label-content-surge {
+  position: static !important;
+  float: none !important;
+  width: auto !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  transform: none !important;
+  opacity: 1 !important;
+}
+
+.hbe-input-field,
+.hbe-input-field-shrink,
+.hbe-input-field-default,
+.hbe-input-field-up,
+.hbe-input-field-wave,
+.hbe-input-field-flip,
+.hbe-input-field-xray,
+.hbe-input-field-blink,
+.hbe-input-field-surge {
+  grid-area: input;
+  display: block;
+  box-sizing: border-box;
+  width: 100% !important;
+  min-height: 46px;
+  padding: 10px 14px !important;
+  border: 1px solid var(--encrypt-line) !important;
+  border-right: 0 !important;
+  border-radius: 8px 0 0 8px !important;
+  outline: none;
+  background: var(--encrypt-card) !important;
+  color: var(--encrypt-ink) !important;
+  font: inherit;
+  line-height: 1.5;
+  box-shadow: none !important;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.hbe-input-field:focus {
+  border-color: var(--encrypt-theme) !important;
+  background: var(--encrypt-paper) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--encrypt-theme) 14%, transparent) !important;
+}
+
+.hbe-input-label,
+.hbe-input-label-shrink,
+.hbe-input-label-default,
+.hbe-input-label-up,
+.hbe-input-label-wave,
+.hbe-input-label-flip,
+.hbe-input-label-xray,
+.hbe-input-label-blink,
+.hbe-input-label-surge {
+  grid-area: label;
+  display: block;
+  width: 100% !important;
+  padding: 0 0 10px !important;
+  color: var(--encrypt-ink) !important;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.5;
+  text-align: left;
+  pointer-events: auto !important;
+}
+
+.hbe-input-label::before,
+.hbe-input-label::after,
+.hbe-input-label-content::before,
+.hbe-input-label-content::after,
+.hbe-input-label-shrink::before,
+.hbe-input-label-shrink::after,
+.hbe-input-label-default::before,
+.hbe-input-label-default::after,
+.hbe-input-label-up::before,
+.hbe-input-label-up::after,
+.hbe-input-label-wave::before,
+.hbe-input-label-wave::after,
+.hbe-input-label-flip::before,
+.hbe-input-label-flip::after,
+.hbe-input-label-xray::before,
+.hbe-input-label-xray::after,
+.hbe-input-label-blink::before,
+.hbe-input-label-blink::after,
+.hbe-input-label-surge::before,
+.hbe-input-label-surge::after {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  content: none !important;
+  transform: none !important;
+}
+
+.hbe-input-label-content,
+.hbe-input-label-content-shrink,
+.hbe-input-label-content-default,
+.hbe-input-label-content-up,
+.hbe-input-label-content-wave,
+.hbe-input-label-content-flip,
+.hbe-input-label-content-xray,
+.hbe-input-label-content-blink,
+.hbe-input-label-content-surge {
+  display: block;
+  width: 100% !important;
+  padding: 0 !important;
+  color: inherit !important;
+  transform: none !important;
+}
+
+.hbe-input-field::placeholder {
+  color: var(--encrypt-muted);
+}
+
+.hbe-submit {
+  grid-area: submit;
+  display: grid;
+  place-items: center;
+  min-height: 46px;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--encrypt-theme);
+  border-radius: 0 8px 8px 0;
+  background: var(--encrypt-theme);
+  color: #fff;
+  font: 700 1.3rem/1 sans-serif;
+  cursor: pointer;
+  transition: filter .2s ease, transform .2s ease;
+}
+
+.hbe-submit:hover {
+  filter: brightness(.92);
+}
+
+.hbe-submit:active {
+  transform: translateX(1px);
+}
+
+.hbe-button {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 40px;
+  margin: 18px 0 0;
+  padding: 8px 14px;
+  border: 1px solid var(--encrypt-line);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--encrypt-muted);
+  font: inherit;
+  font-size: .82rem;
+  cursor: pointer;
+}
+
+.hbe-button::after,
+.hbe-graphic {
+  display: none !important;
+  content: none !important;
+}
+
+@media (max-width: 680px) {
+  .hbe-container {
+    padding: 18px 16px 20px;
+  }
+
+  .hbe-header {
+    gap: 8px;
+  }
+
+  .hbe-header-note {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hbe-submit {
+    transition: none;
+  }
+}
