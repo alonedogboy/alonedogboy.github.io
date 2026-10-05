@@ -1,0 +1,411 @@
+:root {
+  --encrypt-ink: var(--text, #243244);
+  --encrypt-muted: var(--blog-muted, #5d6975);
+  --encrypt-paper: var(--blog-reading-paper, rgb(255 255 255 / 96%));
+  --encrypt-card: var(--blog-card, rgb(255 255 255 / 58%));
+  --encrypt-line: var(--blog-line, rgb(45 62 80 / 7%));
+  --encrypt-theme: var(--theme, #38b5ef);
+  --encrypt-shadow: var(--blog-shadow, 0 1px 2px rgb(35 45 55 / 5%));
+}
+
+#hexo-blog-encrypt.hbe-container,
+.stellar-lock-demo {
+  position: relative;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 720px;
+  margin: 24px auto 28px;
+  padding: 20px 24px 22px;
+  overflow: hidden;
+  border: 1px solid var(--encrypt-line);
+  border-radius: 12px;
+  background: var(--encrypt-paper);
+  color: var(--encrypt-ink);
+  box-shadow: var(--encrypt-shadow);
+}
+
+#hexo-blog-encrypt.hbe-container::after,
+.stellar-lock-demo::after {
+  position: absolute;
+  right: 24px;
+  bottom: 0;
+  width: 72px;
+  height: 3px;
+  border-radius: 3px 3px 0 0;
+  background: var(--encrypt-theme);
+  content: '';
+  opacity: .72;
+}
+
+#hexo-blog-encrypt .hbe,
+.stellar-lock-demo .hbe {
+  box-sizing: border-box;
+}
+
+#hexo-blog-encrypt .hbe-header,
+.stellar-lock-demo .hbe-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 28px;
+  margin-bottom: 18px;
+  color: var(--encrypt-muted);
+}
+
+.hbe-lock-mark {
+  position: relative;
+  display: inline-block;
+  flex: 0 0 18px;
+  width: 18px;
+  height: 14px;
+  border: 1.5px solid var(--encrypt-theme);
+  border-radius: 4px;
+}
+
+.hbe-lock-mark::before {
+  position: absolute;
+  top: -9px;
+  left: 3px;
+  width: 10px;
+  height: 10px;
+  border: 1.5px solid var(--encrypt-theme);
+  border-bottom: 0;
+  border-radius: 8px 8px 0 0;
+  content: '';
+}
+
+.hbe-lock-mark::after {
+  position: absolute;
+  top: 4px;
+  left: 7px;
+  width: 3px;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--encrypt-theme);
+  content: '';
+}
+
+.hbe-lock-mark--open::before {
+  transform: translate(-2px, -2px) rotate(-28deg);
+  transform-origin: right bottom;
+}
+
+.hbe-kicker {
+  color: var(--encrypt-ink);
+  font-size: .82rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.hbe-header-line {
+  flex: 1 1 auto;
+  height: 1px;
+  min-width: 24px;
+  background: var(--encrypt-line);
+}
+
+.hbe-header-note {
+  font-size: .76rem;
+  white-space: nowrap;
+}
+
+#hexo-blog-encrypt .hbe-content,
+.stellar-lock-demo .hbe-content {
+  padding: 0;
+  text-align: left;
+  font-size: 1rem;
+}
+
+#hexo-blog-encrypt .hbe-input,
+.stellar-lock-demo .hbe-input {
+  position: relative;
+  display: grid;
+  grid-template-areas:
+    'label label'
+    'input submit';
+  grid-template-columns: minmax(0, 1fr) 46px;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  float: none;
+  text-align: left;
+}
+
+#hexo-blog-encrypt .hbe-input-field,
+#hexo-blog-encrypt .hbe-input-label,
+#hexo-blog-encrypt .hbe-input-label-content {
+  position: static !important;
+  float: none !important;
+  transform: none !important;
+  opacity: 1 !important;
+}
+
+#hexo-blog-encrypt .hbe-input-label::before,
+#hexo-blog-encrypt .hbe-input-label::after,
+#hexo-blog-encrypt .hbe-input-label-content::before,
+#hexo-blog-encrypt .hbe-input-label-content::after {
+  display: none !important;
+  content: none !important;
+}
+
+#hexo-blog-encrypt .hbe-graphic {
+  display: none !important;
+}
+
+#hexo-blog-encrypt .hbe-input-label,
+.stellar-lock-demo .hbe-input-label {
+  grid-area: label;
+  display: block;
+  width: 100%;
+  padding: 0 0 10px;
+  color: var(--encrypt-ink);
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.5;
+  text-align: left;
+}
+
+#hexo-blog-encrypt .hbe-input-label-content,
+.stellar-lock-demo .hbe-input-label-content {
+  display: block;
+  width: 100%;
+  padding: 0;
+}
+
+#hexo-blog-encrypt .hbe-input-field,
+.stellar-lock-demo .hbe-input-field {
+  grid-area: input;
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 46px;
+  margin: 0;
+  padding: 10px 14px;
+  border: 1px solid var(--encrypt-line);
+  border-right: 0;
+  border-radius: 8px 0 0 8px;
+  outline: none;
+  background: var(--encrypt-card);
+  color: var(--encrypt-ink);
+  font: inherit;
+  box-shadow: none;
+  -webkit-appearance: none;
+  appearance: none;
+  transition: border-color .2s ease, background-color .2s ease, box-shadow .2s ease;
+}
+
+#hexo-blog-encrypt .hbe-input-field::placeholder,
+.stellar-lock-demo .hbe-input-field::placeholder {
+  color: var(--encrypt-muted);
+}
+
+#hexo-blog-encrypt .hbe-input-field:focus,
+.stellar-lock-demo .hbe-input-field:focus {
+  border-color: var(--encrypt-theme);
+  background: var(--encrypt-paper);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--encrypt-theme) 14%, transparent);
+}
+
+#hexo-blog-encrypt .hbe-submit,
+.stellar-lock-demo .hbe-submit {
+  grid-area: submit;
+  display: grid;
+  place-items: center;
+  min-height: 46px;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--encrypt-theme);
+  border-radius: 0 8px 8px 0;
+  background: var(--encrypt-theme);
+  color: #fff;
+  font: 700 1.3rem/1 sans-serif;
+  cursor: pointer;
+  transition: filter .2s ease, transform .2s ease;
+}
+
+#hexo-blog-encrypt .hbe-submit:hover,
+.stellar-lock-demo .hbe-submit:hover {
+  filter: brightness(.92);
+}
+
+#hexo-blog-encrypt .hbe-submit:active,
+.stellar-lock-demo .hbe-submit:active {
+  transform: translateX(1px);
+}
+
+#hexo-blog-encrypt .hbe-button {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  min-height: 40px;
+  margin: 18px 0 0;
+  padding: 8px 14px;
+  border: 1px solid var(--encrypt-line);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--encrypt-muted);
+  font: inherit;
+  font-size: .82rem;
+  cursor: pointer;
+  transition: border-color .2s ease, color .2s ease, background-color .2s ease;
+}
+
+#hexo-blog-encrypt .hbe-button:hover {
+  border-color: var(--encrypt-theme);
+  background: color-mix(in srgb, var(--encrypt-theme) 8%, transparent);
+  color: var(--encrypt-ink);
+}
+
+#hexo-blog-encrypt .hbe-button::after {
+  display: none;
+}
+
+.stellar-lock-hint {
+  margin: 10px 0 0;
+  color: var(--encrypt-muted);
+  font-size: .78rem;
+}
+
+.stellar-lock-preview {
+  max-width: 720px;
+  margin: 0 auto;
+  color: var(--encrypt-ink);
+}
+
+.stellar-lock-preview__intro {
+  margin-bottom: 20px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--encrypt-line);
+}
+
+.stellar-lock-preview__eyebrow {
+  margin: 0 0 8px;
+  color: var(--encrypt-theme);
+  font-size: .78rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+}
+
+.stellar-lock-preview__intro h1 {
+  margin: 0 0 12px;
+  font-size: clamp(1.5rem, 3vw, 2rem);
+}
+
+.stellar-lock-preview__intro > p:last-child {
+  max-width: 620px;
+  margin: 0;
+  color: var(--encrypt-muted);
+  line-height: 1.8;
+}
+
+.stellar-lock-preview__caption {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 2px 10px;
+  color: var(--encrypt-muted);
+  font-size: .78rem;
+}
+
+.stellar-lock-preview__caption span:first-child {
+  color: var(--encrypt-ink);
+  font-weight: 700;
+}
+
+.stellar-lock-demo {
+  margin-top: 0;
+}
+
+.stellar-lock-demo--unlocked {
+  margin-top: 14px;
+}
+
+.stellar-lock-demo__content {
+  line-height: 1.85;
+}
+
+.stellar-lock-demo__content p {
+  margin-block: 0 10px;
+}
+
+.stellar-lock-demo__content p:last-child {
+  margin-bottom: 0;
+}
+
+.stellar-lock-preview__details {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.stellar-lock-preview__details > div {
+  padding-top: 12px;
+  border-top: 2px solid var(--encrypt-line);
+}
+
+.stellar-lock-preview__details span {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--encrypt-theme);
+  font-size: .78rem;
+  font-weight: 700;
+}
+
+.stellar-lock-preview__details strong {
+  display: block;
+  margin-bottom: 4px;
+  font-size: .9rem;
+}
+
+.stellar-lock-preview__details p {
+  margin: 0;
+  color: var(--encrypt-muted);
+  font-size: .8rem;
+  line-height: 1.7;
+}
+
+@media (max-width: 680px) {
+  #hexo-blog-encrypt.hbe-container,
+  .stellar-lock-demo {
+    padding: 18px 16px 20px;
+  }
+
+  #hexo-blog-encrypt .hbe-header,
+  .stellar-lock-demo .hbe-header {
+    gap: 8px;
+  }
+
+  .hbe-header-note {
+    display: none;
+  }
+
+  .stellar-lock-preview__caption {
+    display: block;
+  }
+
+  .stellar-lock-preview__caption span {
+    display: block;
+  }
+
+  .stellar-lock-preview__caption span + span {
+    margin-top: 4px;
+  }
+
+  .stellar-lock-preview__details {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #hexo-blog-encrypt .hbe-input-field,
+  #hexo-blog-encrypt .hbe-submit,
+  #hexo-blog-encrypt .hbe-button,
+  .stellar-lock-demo .hbe-input-field,
+  .stellar-lock-demo .hbe-submit {
+    transition: none;
+  }
+}
