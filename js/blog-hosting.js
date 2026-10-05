@@ -16,7 +16,7 @@ export function prepareCloudflareDocument(documentRef) {
   }
 }
 
-export function isCaseOnlyRedirect(requested, responseURL) {
+export function isCaseNormalizedRedirect(requested, responseURL) {
   try {
     const target = new URL(responseURL);
     return target.origin === requested.origin && target.search === requested.search
